@@ -1,4 +1,5 @@
 package com.capgemini.hospital_management_system.model;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class OnCall {
     @Id
     @ManyToOne
     @JoinColumn(name = "Nurse")
+    @JsonBackReference
     private Nurse nurse;
 
     @Id
@@ -24,6 +26,7 @@ public class OnCall {
             @JoinColumn(name = "BlockFloor", referencedColumnName = "BlockFloor"),
             @JoinColumn(name = "BlockCode", referencedColumnName = "BlockCode")
     })
+    @JsonBackReference
     private Block block;
 
     @Id

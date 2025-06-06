@@ -1,5 +1,6 @@
 package com.capgemini.hospital_management_system.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,11 +17,13 @@ public class AffiliatedWith {
     @Id
     @ManyToOne
     @JoinColumn(name = "Physician")
+    @JsonManagedReference
     private Physician physician;
 
     @Id
     @ManyToOne
     @JoinColumn(name = "Department")
+    @JsonManagedReference
     private Department department;
 
     @Column(name = "PrimaryAffiliation", nullable = false)

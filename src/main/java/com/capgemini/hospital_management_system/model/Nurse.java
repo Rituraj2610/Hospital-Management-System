@@ -1,6 +1,7 @@
 package com.capgemini.hospital_management_system.model;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,12 +33,15 @@ public class Nurse {
     private Integer ssn;
 
     @OneToMany(mappedBy = "prepNurse")
+    @JsonManagedReference
     private Set<Appointment> appointments = new     HashSet<>();
 
     @OneToMany(mappedBy = "nurse")
+    @JsonManagedReference
     private Set<OnCall> onCalls = new HashSet<>();
 
     @OneToMany(mappedBy = "assistingNurse")
+    @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
 
 }
