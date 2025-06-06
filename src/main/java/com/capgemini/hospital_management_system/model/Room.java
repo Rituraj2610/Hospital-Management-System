@@ -1,4 +1,6 @@
 package com.capgemini.hospital_management_system.model;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,12 +27,14 @@ public class Room {
             @JoinColumn(name = "BlockFloor", referencedColumnName = "BlockFloor"),
             @JoinColumn(name = "BlockCode", referencedColumnName = "BlockCode")
     })
+    @JsonBackReference
     private Block block;
 
     @Column(name = "Unavailable", nullable = false)
     private Boolean unavailable;
 
     @OneToMany(mappedBy = "room")
+    @JsonManagedReference
     private Set<Stay> stays = new HashSet<>();
 
 }

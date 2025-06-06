@@ -1,6 +1,7 @@
 package com.capgemini.hospital_management_system.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,11 +19,13 @@ public class TrainedIn {
     @Id
     @ManyToOne
     @JoinColumn(name = "Physician")
+    @JsonBackReference
     private Physician physician;
 
     @Id
     @ManyToOne
     @JoinColumn(name = "Treatment")
+    @JsonBackReference
     private Procedure treatment;
 
     @Column(name = "CertificationDate", nullable = false)

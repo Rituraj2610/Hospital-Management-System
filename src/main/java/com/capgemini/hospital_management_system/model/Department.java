@@ -1,5 +1,6 @@
 package com.capgemini.hospital_management_system.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,9 +25,11 @@ public class Department {
 
     @ManyToOne
     @JoinColumn(name = "Head", nullable = false)
+    @JsonBackReference
     private Physician head;
 
     @ManyToMany(mappedBy = "affiliatedDepartments")
+    @JsonBackReference
     private Set<Physician> physicians = new HashSet<>();
 
 //    CONSTRAINT pk_Department PRIMARY KEY(DepartmentID),
