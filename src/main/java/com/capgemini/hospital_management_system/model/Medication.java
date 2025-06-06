@@ -1,4 +1,5 @@
 package com.capgemini.hospital_management_system.model;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class Medication {
     private String description;
 
     @OneToMany(mappedBy = "medication")
+    @JsonManagedReference
     private Set<Prescribes> prescriptions = new HashSet<>();
 
 

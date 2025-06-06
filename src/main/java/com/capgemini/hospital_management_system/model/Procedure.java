@@ -1,5 +1,7 @@
 package com.capgemini.hospital_management_system.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,8 +27,10 @@ public class Procedure {
     private Double cost;
 
     @ManyToMany(mappedBy = "trainedProcedures")
+    @JsonBackReference
     private Set<Physician> trainedPhysicians = new HashSet<>();
 
     @OneToMany(mappedBy = "procedure")
+    @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
 }

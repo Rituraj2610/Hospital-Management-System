@@ -1,6 +1,8 @@
 package com.capgemini.hospital_management_system.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,14 +18,17 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "Patient", nullable = false)
+    @JsonBackReference
     private Patient patient;
 
     @ManyToOne
     @JoinColumn(name = "PrepNurse")
+    @JsonBackReference
     private Nurse prepNurse;
 
     @ManyToOne
     @JoinColumn(name = "Physician", nullable = false)
+    @JsonBackReference
     private Physician physician;
 
     @Column(name = "Starto", nullable = false)
@@ -36,6 +41,7 @@ public class Appointment {
     private String examinationRoom;
 
     @OneToMany(mappedBy = "appointment")
+    @JsonManagedReference
     private Set<Prescribes> prescriptions = new HashSet<>();
 
 }
