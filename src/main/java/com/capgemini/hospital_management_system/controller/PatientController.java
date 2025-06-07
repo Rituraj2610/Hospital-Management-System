@@ -87,6 +87,7 @@ public class PatientController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    //GET /api/patient/insurance/{patientid} - Retrieve patients insurance number
     @GetMapping("/insurance/{patientid}")
     public ResponseEntity<Response<Integer>> getPatientInsuranceId(@PathVariable("patientid") Integer patientId) {
         Patient patient = patientRepository.findById(patientId)
@@ -101,6 +102,7 @@ public class PatientController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    //POST /api/patient - Add new Patient
     @PostMapping
     public ResponseEntity<Response<String>> addPatient(@RequestBody PatientDTO patientDTO) {
         if (patientDTO.getSsn() == null || patientDTO.getName() == null || patientDTO.getAddress() == null ||
@@ -122,6 +124,25 @@ public class PatientController {
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // PUT /api/patient/address/{SSN} - Update patient address
+    @PutMapping("/address/{SSN}")
+    public ResponseEntity<Response<PatientDTO>> updatePatientAddress(@PathVariable Integer SSN,
+                                                                     @RequestBody String address) {
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be empty");
+        }
+        Patient patient = patientRepository.findById(SSN)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with SSN: " + SSN));
+        patient.setAddress(address);
+        patientRepository.save(patient);
+        Response<PatientDTO> response = new Response<>(
+                HttpStatus.OK.value(),
+                "Address updated successfully",
+                patientMapping.toDTO(patient),
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }
