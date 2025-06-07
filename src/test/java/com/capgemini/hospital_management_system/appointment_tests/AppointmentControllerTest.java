@@ -265,4 +265,31 @@ public class AppointmentControllerTest {
                         result.getResolvedException().getMessage()));
     }
 
+    @Test
+    @DisplayName("Get nurse by patient ID")
+    void fetchNurseFromPatientId_ReturnsNurseDto() throws Exception {
+
+        Nurse nurse = new Nurse(111, "n1", "head", true, 1111,
+                new HashSet<>(), new HashSet<>(), new HashSet<>());
+
+        Appointment appointment1 = new Appointment(111, new Patient(), nurse, new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
+
+        List<Appointment> appointments = List.of(appointment1);
+
+
+        NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO("n1", "head", true, 1111);
+
+        Mockito.when(appointmentRepository.findByPatient_Ssn(222)).thenReturn(appointments);
+        Mockito.when(nurseMapper.toDto(Mockito.any(Nurse.class))).thenReturn(nurseAppointmentDTO);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/nurse/patient/222"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found the nurses"))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("n1"))
+                .andExpect(jsonPath("$.data[0].position").value("head"))
+                .andExpect(jsonPath("$.data[0].registered").value(true))
+                .andExpect(jsonPath("$.data[0].ssn").value(1111));
+    }
 }
