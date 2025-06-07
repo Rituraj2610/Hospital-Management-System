@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -130,6 +131,25 @@ public class AppointmentController {
                 .status(200)
                 .message("Found the room")
                 .data(room)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/physician/patient/{patientid}")
+    public ResponseEntity<Response<List<PhysicianAppointmentDTO>>> fetchPhysicianByPatientId(@PathVariable Integer patientid){
+        List<Appointment> appointmentList = appointmentRepository.findByPatient_Ssn(patientid);
+        if(appointmentList.isEmpty()){
+            throw  new EntityNotFoundException("No appointment found for the given patient");
+        }
+        List<PhysicianAppointmentDTO> appointmentDTOList = appointmentList.stream()
+                .map(appointment -> physicianMapper.toDto(appointment.getPhysician()))
+                .toList();
+
+        Response<List<PhysicianAppointmentDTO>> response = Response.<List<PhysicianAppointmentDTO>>builder()
+                .status(200)
+                .message("Found the physicians")
+                .data(appointmentDTOList)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
