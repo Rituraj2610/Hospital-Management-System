@@ -143,6 +143,15 @@ public class DepartmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/check/{physicianId}")
+    public ResponseEntity<Boolean> checkHeadRole(@PathVariable Integer physicianId) {
+        boolean isHead = departmentRepository.existsByHeadEmployeeId(physicianId);
+        return new ResponseEntity<>(isHead , HttpStatus.OK);
+    }
+
+
+
+
 
 
 
