@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -29,6 +30,7 @@ import java.util.List;
 public class AppointmentController {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentMapper appointmentMapper;
+    private final PatientMapper patientMapper;
 
     @GetMapping
     public ResponseEntity<Response<List<AppointmentDTO>>> fetchAllAppointments(){
@@ -70,6 +72,20 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/patient/{appointmentid}")
+    public ResponseEntity<Response<PatientAppointmentDTO>> fetchPatientFromAppointmentId(@PathVariable Integer appointmentid){
+        Optional<Patient> optionalPatient = appointmentRepository.findPatientByAppointmentId(appointmentid);
+        if(optionalPatient.isEmpty()){
+            throw new EntityNotFoundException("Patient not found!");
+        }
+        Response<PatientAppointmentDTO> response = Response.<PatientAppointmentDTO>builder()
+                .status(200)
+                .message("Found the patient's appointment")
+                .data(patientMapper.toDto(optionalPatient.get()))
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 
