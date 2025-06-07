@@ -2,18 +2,10 @@ spring:
   application:
     name: hospital-management-system
   datasource:
-    #LOCAL DB
-    url: jdbc:mysql://localhost:3306/hospital_management_system
+    url: jdbc:mysql://localhost:3306/hospital_management_system_test
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
-
-    #REMOTE DB
-#    url: jdbc:mysql://localhost:3306/hospital_management_server
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    username: aman
-#    password: pass@123
-
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,7 +15,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
   data:
     rest:
       base-path: /api
