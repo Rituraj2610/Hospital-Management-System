@@ -55,7 +55,12 @@ public class PatientController {
     @GetMapping("/{physicianid}")
     public ResponseEntity<Response<List<PatientDTO>>> getPatientsByPhysician(@PathVariable Integer physicianid) {
         List<Patient> patient = patientRepository.findByPCP_employeeId(physicianid)
-                .orElseThrow(() -> new EntityNotFoundException("Physician with ID " + physicianid + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException
+                        ("Physician with ID " + physicianid + " not found"));
+
+        if (patient.isEmpty()) {
+            throw new EntityNotFoundException("No patients found under ID " + physicianid);
+        }
 
         List<PatientDTO> patients = patientRepository.findAll()
                 .stream()
