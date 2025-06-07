@@ -145,4 +145,23 @@ public class PatientController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // PUT /api/patient/phone/{SSN} - Update patient phone number
+    @PutMapping("/phone/{SSN}")
+    public ResponseEntity<Response<PatientDTO>> updatePatientPhone(@PathVariable Integer SSN,
+                                                                   @RequestBody String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new IllegalArgumentException("Phone number cannot be empty");
+        }
+        Patient patient = patientRepository.findById(SSN)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with SSN: " + SSN));
+        patient.setPhone(phone);
+        patientRepository.save(patient);
+        Response<PatientDTO> response = new Response<>(
+                HttpStatus.OK.value(),
+                "Phone number updated successfully",
+                patientMapping.toDTO(patient),
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }
