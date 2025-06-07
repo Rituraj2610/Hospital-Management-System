@@ -51,6 +51,24 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/{startdate}")
+    public ResponseEntity<Response<List<AppointmentDTO>>> fetchAppointmentsByStartBy(@PathVariable LocalDateTime startdate){
+        List<Appointment> appointmentList = appointmentRepository.findByStart(startdate);
+        if(appointmentList.isEmpty()){
+            throw new EntityNotFoundException("No appointments found!");
+        }
+        List<AppointmentDTO> appointmentDTOList = appointmentList.stream()
+                .map(appointmentMapper::toDto)
+                .toList();
+
+        Response<List<AppointmentDTO>> response = Response.<List<AppointmentDTO>>builder()
+                .status(200)
+                .message("Found all appointments")
+                .data(appointmentDTOList)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 
