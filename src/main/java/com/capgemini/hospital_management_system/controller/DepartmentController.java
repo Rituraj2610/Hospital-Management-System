@@ -115,6 +115,35 @@ public class DepartmentController {
 
     }
 
+    @GetMapping("/deptHead/{headId}")
+    public ResponseEntity<Response<List<DepartmentDto>>> getDepartmentsByHeadId(@PathVariable Integer headId) {
+
+        List<Department> departments = departmentRepository.findAllByHeadEmployeeId(headId);
+
+        if (departments.isEmpty()) {
+            throw new EntityNotFoundException("No departments found for head ID " + headId);
+        }
+
+        List<DepartmentDto> departmentDtos = departments.stream()
+                .map(dept -> {
+                    DepartmentDto dto = modelMapper.map(dept, DepartmentDto.class);
+                    PhysicianDepartmentDto physicianDto = modelMapper.map(dept.getHead(), PhysicianDepartmentDto.class);
+                    dto.setPhysicianDetail(physicianDto);
+                    return dto;
+                })
+                .toList();
+
+        Response<List<DepartmentDto>> response = Response.<List<DepartmentDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Departments fetched successfully for head ID " + headId)
+                .data(departmentDtos)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 
 
 }
