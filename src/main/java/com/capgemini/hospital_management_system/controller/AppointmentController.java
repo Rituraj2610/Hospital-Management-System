@@ -33,6 +33,7 @@ public class AppointmentController {
     private final AppointmentMapper appointmentMapper;
     private final PatientMapper patientMapper;
     private final PhysicianMapper physicianMapper;
+    private final NurseMapper nurseMapper;
 
     @GetMapping
     public ResponseEntity<Response<List<AppointmentDTO>>> fetchAllAppointments(){
@@ -93,12 +94,27 @@ public class AppointmentController {
     public ResponseEntity<Response<PhysicianAppointmentDTO>> fetchPhysicianFromAppointmentId(@PathVariable Integer appointmentid){
         Optional<Physician> optionalPhysician = appointmentRepository.findPhysicianByAppointmentId(appointmentid);
         if(optionalPhysician.isEmpty()){
-            throw new EntityNotFoundException("Patient not found!");
+            throw new EntityNotFoundException("Physician not found!");
         }
         Response<PhysicianAppointmentDTO> response = Response.<PhysicianAppointmentDTO>builder()
                 .status(200)
                 .message("Found the physician's appointment")
                 .data(physicianMapper.toDto(optionalPhysician.get()))
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/nurse/{appointmentid}")
+    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseFromAppointmentId(@PathVariable Integer appointmentid){
+        Optional<Nurse> optionalNurse = appointmentRepository.fetchNurseFromAppointmentId(appointmentid);
+        if(optionalNurse.isEmpty()){
+            throw new EntityNotFoundException("Nurse not found!");
+        }
+        Response<NurseAppointmentDTO> response = Response.<NurseAppointmentDTO>builder()
+                .status(200)
+                .message("Found the nurse's appointment")
+                .data(nurseMapper.toDto(optionalNurse.get()))
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
