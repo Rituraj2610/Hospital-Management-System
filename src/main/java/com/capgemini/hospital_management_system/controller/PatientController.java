@@ -46,8 +46,7 @@ public class PatientController {
                 HttpStatus.OK.value(),
                 "Patients retrieved successfully",
                 patientDTOs,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -57,23 +56,34 @@ public class PatientController {
         List<Patient> patient = patientRepository.findByPCP_employeeId(physicianid)
                 .orElseThrow(() -> new EntityNotFoundException
                         ("Physician with ID " + physicianid + " not found"));
-
         if (patient.isEmpty()) {
             throw new EntityNotFoundException("No patients found under ID " + physicianid);
         }
-
         List<PatientDTO> patients = patientRepository.findAll()
                 .stream()
                 .filter(p -> physicianid.equals(p.getPCP().getEmployeeId()))
                 .map(patientMapping::toDTO)
                 .collect(Collectors.toList());
-
         Response<List<PatientDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
                 "Patients for physician " + physicianid + " retrieved successfully",
                 patients,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // GET /api/patient/{physicianid}/{patientid} - Get detail of patient checked by a particular physician
+    @GetMapping("/{physicianid}/{patientid}")
+    public ResponseEntity<Response<PatientDTO>> getPatientByPhysicianAndId(@PathVariable Integer physicianid,
+                                                                           @PathVariable Integer patientid) {
+        Patient patient = patientRepository.findByPCP_EmployeeIdAndSsn(physicianid, patientid)
+                .orElseThrow(() -> new EntityNotFoundException("Patient ID: " + patientid +
+                        " not associated with physician ID: " + physicianid));
+        Response<PatientDTO> response = new Response<>(
+                HttpStatus.OK.value(),
+                "Patient retrieved successfully",
+                patientMapping.toDTO(patient),
+                LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
