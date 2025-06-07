@@ -14,7 +14,7 @@ import java.util.Set;
 public class Appointment {
     @Id
     @Column(name = "AppointmentID")
-    private Long appointmentId;
+    private Integer appointmentId;
 
     @ManyToOne
     @JoinColumn(name = "Patient", nullable = false)

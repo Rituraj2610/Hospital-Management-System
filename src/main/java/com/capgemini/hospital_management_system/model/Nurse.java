@@ -18,7 +18,7 @@ import java.util.Set;
 public class Nurse {
     @Id
     @Column(name = "EmployeeID")
-    private Long employeeId;
+    private Integer employeeId;
 
     @Column(name = "Name", nullable = false)
     private String name;

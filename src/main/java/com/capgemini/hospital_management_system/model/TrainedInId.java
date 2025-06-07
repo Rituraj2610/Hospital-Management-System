@@ -10,6 +10,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Data
 public class TrainedInId implements Serializable {
-    private Long physician; // Matches Physician.employeeId
-    private Long treatment; // Matches Procedure.code
+    private Integer physician; // Matches Physician.employeeId
+    private Integer treatment; // Matches Procedure.code
 }
