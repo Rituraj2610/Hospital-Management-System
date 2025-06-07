@@ -107,4 +107,22 @@ class NurseControllerTest {
                 .andExpect(jsonPath("$.message").value("Nurse with employee ID 1 retrieved successfully"))
                 .andExpect(jsonPath("$.data.name").value("John Smith"));
     }
+    
+    @Test
+    void testGetPositionById() throws Exception {
+        Nurse nurse = new Nurse();
+        nurse.setEmployeeId(1);
+        nurse.setName("John Smith");
+        nurse.setPosition("Head Nurse");
+
+        // Mocking the repository
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
+
+        mockMvc.perform(get("/api/nurse/position/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Position retrieved successfully for employee ID 1"))
+                .andExpect(jsonPath("$.data").value("Head Nurse"));
+    }
+
 }

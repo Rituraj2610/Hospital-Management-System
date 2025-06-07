@@ -2,6 +2,8 @@ package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.NurseDto;
 import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.exception.EntityAlreadyExist;
+import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.NurseMapper;
 import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.repository.NurseRepository;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -22,9 +23,14 @@ public class NurseController {
     private final NurseRepository nurseRepository;
     private final NurseMapper nurseMapper;
 
-    // Saving nurse details
     @PostMapping("/nurse")
     public ResponseEntity<Response<NurseDto>> addNurseDetails(@RequestBody NurseDto req) {
+        Optional<Nurse> existingNurse = nurseRepository.findById(req.getEmployeeId());
+
+        if (existingNurse.isPresent()) {
+            throw new EntityAlreadyExist("Nurse with this ID " + req.getEmployeeId() + " already exists");
+        }
+
         Nurse nurse = nurseMapper.toEntity(req);
         nurseRepository.save(nurse);
         NurseDto responseDto = nurseMapper.toDto(nurse);
@@ -45,14 +51,7 @@ public class NurseController {
         List<Nurse> nurses = nurseRepository.findAll();
 
         if (nurses.isEmpty()) {
-            return ResponseEntity.status(404).body(
-                new Response<>(
-                    404,
-                    "No nurses found",
-                    null,
-                    LocalDateTime.now()
-                )
-            );
+            throw new EntityNotFoundException("Not able to fetch all details of nurese");
         }
 
         List<NurseDto> responseDto = nurseMapper.toDtoList(nurses);
@@ -70,14 +69,8 @@ public class NurseController {
         Optional<Nurse> nurse = nurseRepository.findById(id);
 
         if (nurse.isEmpty()) {
-            return ResponseEntity.status(404).body(
-                new Response<>(
-                    404,
-                    "Nurse with employee ID " + id + " not found",
-                    null,
-                    LocalDateTime.now()
-                )
-            );
+            
+            throw new EntityNotFoundException("Nurse with employee ID " + id + " not found");
         }
 
         NurseDto responseDto = nurseMapper.toDto(nurse.get());
@@ -87,5 +80,28 @@ public class NurseController {
             responseDto,
             LocalDateTime.now()
         ));
+        
     }
+    
+    @GetMapping("/nurse/position/{empid}")
+    public ResponseEntity<Response<String>> getPositionById(@PathVariable("empid") Integer id) {
+        Optional<Nurse> nurse = nurseRepository.findById(id);
+
+        if (nurse.isEmpty()) {
+            if (nurse.isEmpty()) {
+                throw new EntityNotFoundException("Nurse with ID " + id + " does not exist");
+            }
+        }
+
+        return ResponseEntity.ok(
+            new Response<>(
+                200,
+                "Position retrieved successfully for employee ID " + id,
+                nurse.get().getPosition(),
+                LocalDateTime.now()
+            )
+        );
+    }
+
+
 }
