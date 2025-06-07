@@ -102,6 +102,72 @@ public class NurseController {
             )
         );
     }
+    
+    //accessing status for nurse by id
+    
+    @GetMapping("/nurse/registered/{empid}")
+    public ResponseEntity<Response<Boolean>> isNurseRegistered(@PathVariable("empid") Integer id) {
+        Optional<Nurse> nurse = nurseRepository.findById(id);
+        
+        if (nurse.isEmpty()) {
+            throw new EntityNotFoundException("Nurse with ID " + id + " does not exist");
+        }
+
+        return ResponseEntity.ok(
+            new Response<>(
+                200,
+                "Registered status retrieved successfully for employee ID " + id,
+                nurse.get().getRegistered(),
+                LocalDateTime.now()
+            )
+        );
+    }
+    
+    @PutMapping("/nurse/registered/{empid}")
+    public ResponseEntity<Response<Boolean>> updateRegisteredStatus(
+            @PathVariable("empid") Integer id,
+            @RequestBody Boolean registered) {
+
+        Nurse nurse = nurseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Nurse with ID " + id + " does not exist"));
+
+        nurse.setRegistered(registered);
+        nurseRepository.save(nurse);
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "Registered status updated successfully for employee ID " + id,
+                nurse.getRegistered(), 
+                LocalDateTime.now()
+        ));
+    }
+    
+    //updating ssn for nurse by id
+    
+    @PutMapping("/nurse/ssn/{empid}")
+    public ResponseEntity<Response<NurseDto>> updateNurseSSN(
+            @PathVariable("empid") Integer id,
+            @RequestBody Integer newSsn) {
+
+        Optional<Nurse> optionalNurse = nurseRepository.findById(id);
+        if (optionalNurse.isEmpty()) {
+            throw new EntityNotFoundException("Nurse with ID " + id + " does not exist");
+        }
+
+        Nurse nurse = optionalNurse.get();
+        nurse.setSsn(newSsn);   // Update SSN
+        nurseRepository.save(nurse);
+
+        NurseDto responseDto = nurseMapper.toDto(nurse);
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "SSN updated successfully for employee ID " + id,
+                responseDto,
+                LocalDateTime.now()
+        ));
+    }
+
 
 
 }
