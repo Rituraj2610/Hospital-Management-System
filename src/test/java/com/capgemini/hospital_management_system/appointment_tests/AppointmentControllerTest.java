@@ -257,7 +257,7 @@ public class AppointmentControllerTest {
         Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00:00"), 111)).thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/physician/111/2008-04-24T10:00:00")) // change to actual path
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/physician/111/2008-04-24T10:00:00"))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(
                         result.getResolvedException() instanceof EntityNotFoundException))
@@ -292,4 +292,20 @@ public class AppointmentControllerTest {
                 .andExpect(jsonPath("$.data[0].registered").value(true))
                 .andExpect(jsonPath("$.data[0].ssn").value(1111));
     }
+
+    @Test
+    @DisplayName("Get physicians by patient id on a date throws error")
+    void fetchNurseByPatientIdByStartDate_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
+        // Given
+        Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00:00"), 111)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/nurse/111/2008-04-24T10:00:00"))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> Assertions.assertTrue(
+                        result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> Assertions.assertEquals("No appointment found",
+                        result.getResolvedException().getMessage()));
+    }
+
 }
