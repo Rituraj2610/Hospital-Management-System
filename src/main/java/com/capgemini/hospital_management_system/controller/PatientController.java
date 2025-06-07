@@ -87,4 +87,41 @@ public class PatientController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/insurance/{patientid}")
+    public ResponseEntity<Response<Integer>> getPatientInsuranceId(@PathVariable("patientid") Integer patientId) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with ID: "
+                        + patientId));
+        Response<Integer> response = new Response<>(
+                HttpStatus.OK.value(),
+                "Insurance ID retrieved successfully",
+                patient.getInsuranceId(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<Response<String>> addPatient(@RequestBody PatientDTO patientDTO) {
+        if (patientDTO.getSsn() == null || patientDTO.getName() == null || patientDTO.getAddress() == null ||
+                patientDTO.getPhone() == null || patientDTO.getInsuranceId() == null || patientDTO.getPcpId() == null) {
+            throw new IllegalArgumentException("All fields are required");
+        }
+        if (patientRepository.findById(patientDTO.getSsn()).isPresent()) {
+            throw new EntityAlreadyExist("Patient with SSN " + patientDTO.getSsn() + " already exists");
+        }
+        Physician physician = physicianRepository.findByEmployeeId(patientDTO.getPcpId())
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found with ID: " + patientDTO.getPcpId()));
+        Patient patient = patientMapping.toEntity(patientDTO);
+        patient.setPCP(physician);
+        patientRepository.save(patient);
+        Response<String> response = new Response<>(
+                HttpStatus.CREATED.value(),
+                "Patient created successfully",
+                "Record Created Successfully",
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
 }
