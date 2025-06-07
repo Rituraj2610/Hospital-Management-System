@@ -44,12 +44,12 @@ public class AppointmentControllerTest {
     @Test
     @DisplayName("Get all appointments")
     void fetchAllAppointments_ReturnsAppointmentsList() throws Exception {
-        Appointment appointment1 = new Appointment(111, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00:00"), LocalDateTime.parse("2008-04-24T10:00:00"), "e1", new HashSet<>());
-        Appointment appointment2 = new Appointment(222, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00:00"), LocalDateTime.parse("2008-04-24T10:00:00"), "e2", new HashSet<>());
+        Appointment appointment1 = new Appointment(111, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
+        Appointment appointment2 = new Appointment(222, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e2", new HashSet<>());
         List<Appointment> appointments = List.of(appointment1, appointment2);
 
-        AppointmentDTO appointmentDTO1 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00:00"), LocalDateTime.parse("2008-04-24T10:00:00"), "e1", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
-        AppointmentDTO appointmentDTO2 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00:00"), LocalDateTime.parse("2008-04-24T10:00:00"), "e2", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
+        AppointmentDTO appointmentDTO1 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
+        AppointmentDTO appointmentDTO2 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e2", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
 
         Mockito.when(appointmentRepository.findAll()).thenReturn(appointments);
         Mockito.when(appointmentMapper.toDto(appointment1)).thenReturn(appointmentDTO1);
@@ -59,10 +59,17 @@ public class AppointmentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found all appointments"))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].start").value("2008-04-24T10:00:00"))
+                .andExpect(jsonPath("$.data[0].end").value("2008-04-24T10:00:00"))
+                .andExpect(jsonPath("$.data[0].examinationRoom").value("e1"))
+                .andExpect(jsonPath("$.data[1].start").value("2008-04-24T10:00:00"))
+                .andExpect(jsonPath("$.data[1].end").value("2008-04-24T10:00:00"))
+                .andExpect(jsonPath("$.data[1].examinationRoom").value("e2"));
     }
 
     @Test
+    @DisplayName("Get all appointments throws error")
     void fetchAllAppointments_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
         Mockito.when(appointmentRepository.findAll()).thenReturn(Collections.emptyList());
@@ -75,4 +82,43 @@ public class AppointmentControllerTest {
                 .andExpect(result -> Assertions.assertEquals("No Appointments found!",
                         result.getResolvedException().getMessage()));
     }
+
+    @Test
+    @DisplayName("Get appointments by start date")
+    void fetchAppointmentsByStartBy_ReturnsAppointmentsList() throws Exception {
+        Appointment appointment1 = new Appointment(111, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
+          List<Appointment> appointments = List.of(appointment1);
+
+        AppointmentDTO appointmentDTO1 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
+
+        Mockito.when(appointmentRepository.findByStart(LocalDateTime.parse("2008-04-24T10:00")))
+                .thenReturn(appointments);
+        Mockito.when(appointmentMapper.toDto(appointment1)).thenReturn(appointmentDTO1);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/2008-04-24T10:00"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found all appointments"))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].start").value("2008-04-24T10:00:00"))
+                .andExpect(jsonPath("$.data[0].end").value("2008-04-24T10:00:00"))
+                .andExpect(jsonPath("$.data[0].examinationRoom").value("e1"));
+                }
+
+    @Test
+    @DisplayName("Get appointments by start date throws error")
+    void etchAppointmentsByStartBy_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
+        // Given
+        Mockito.when(appointmentRepository.findByStart(LocalDateTime.parse("2008-04-24T10:00"))).thenReturn(Collections.emptyList());
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/2008-04-24T10:00")) // change to actual path
+                .andExpect(status().isNotFound())
+                .andExpect(result -> Assertions.assertTrue(
+                        result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> Assertions.assertEquals("No appointments found!",
+                        result.getResolvedException().getMessage()));
+    }
+
 }
