@@ -13,5 +13,4 @@ public class PatientDTO {
     private String address;
     private String phone;
     private Integer insuranceId;
-    private Integer pcpId;
 }
