@@ -250,4 +250,19 @@ public class AppointmentControllerTest {
         return appointments;
     }
 
+    @Test
+    @DisplayName("Get physicians by patient id on a date throws error")
+    void fetchPhysicianByPatientIdByStartDate_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
+        // Given
+        Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00:00"), 111)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/physician/111/2008-04-24T10:00:00")) // change to actual path
+                .andExpect(status().isNotFound())
+                .andExpect(result -> Assertions.assertTrue(
+                        result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> Assertions.assertEquals("No appointment found",
+                        result.getResolvedException().getMessage()));
+    }
+
 }
