@@ -141,6 +141,33 @@ public class NurseController {
                 LocalDateTime.now()
         ));
     }
+    
+    //updating ssn for nurse by id
+    
+    @PutMapping("/nurse/ssn/{empid}")
+    public ResponseEntity<Response<NurseDto>> updateNurseSSN(
+            @PathVariable("empid") Integer id,
+            @RequestBody Integer newSsn) {
+
+        Optional<Nurse> optionalNurse = nurseRepository.findById(id);
+        if (optionalNurse.isEmpty()) {
+            throw new EntityNotFoundException("Nurse with ID " + id + " does not exist");
+        }
+
+        Nurse nurse = optionalNurse.get();
+        nurse.setSsn(newSsn);   // Update SSN
+        nurseRepository.save(nurse);
+
+        NurseDto responseDto = nurseMapper.toDto(nurse);
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "SSN updated successfully for employee ID " + id,
+                responseDto,
+                LocalDateTime.now()
+        ));
+    }
+
 
 
 }

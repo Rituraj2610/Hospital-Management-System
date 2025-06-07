@@ -172,5 +172,32 @@ class NurseControllerTest {
             .andExpect(jsonPath("$.message").value("Registered status updated successfully for employee ID 1"))
             .andExpect(jsonPath("$.data").value(true));
     }
+    
+    //testing for updating ssn 
+    @Test
+    void testUpdateNurseSSN() throws Exception {
+        // Arrange
+        Nurse nurse = new Nurse();
+        nurse.setEmployeeId(1);
+        nurse.setSsn(123456);
+
+        NurseDto updatedDto = new NurseDto();
+        updatedDto.setEmployeeId(1);
+        updatedDto.setSsn(999999);
+
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
+        when(nurseRepository.save(any(Nurse.class))).thenReturn(nurse);
+        when(nurseMapper.toDto(any(Nurse.class))).thenReturn(updatedDto);
+
+        mockMvc.perform(put("/api/nurse/ssn/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("999999")) // sending new SSN in the request body
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("SSN updated successfully for employee ID 1"))
+            .andExpect(jsonPath("$.data.employeeId").value(1))
+            .andExpect(jsonPath("$.data.ssn").value(999999));
+    }
+
 
 }
