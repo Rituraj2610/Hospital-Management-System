@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Integer> {
     Optional<List<Patient>> findByPCP_employeeId(int pcp_id);
+
+    Optional<Patient> findByPCP_EmployeeIdAndSsn(int pcp_id, int ssn);
 }
