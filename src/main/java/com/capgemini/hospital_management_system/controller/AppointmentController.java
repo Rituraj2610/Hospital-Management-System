@@ -155,7 +155,22 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/physician/{patientid}/{date}")
+    public ResponseEntity<Response<PhysicianAppointmentDTO>> fetchPhysicianByPatientIdByStartDate(@PathVariable Integer patientid, @PathVariable LocalDateTime date){
+        Optional<Appointment> optionalAppointment = appointmentRepository.findByStartAndPatient_Ssn(date, patientid);
+        if(optionalAppointment.isEmpty()){
+            throw  new EntityNotFoundException("No appointment found");
+        }
 
+        PhysicianAppointmentDTO physicianAppointmentDTO = physicianMapper.toDto(optionalAppointment.get().getPhysician());
+        Response<PhysicianAppointmentDTO> response = Response.<PhysicianAppointmentDTO>builder()
+                .status(200)
+                .message("Found the physicians")
+                .data(physicianAppointmentDTO)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 
