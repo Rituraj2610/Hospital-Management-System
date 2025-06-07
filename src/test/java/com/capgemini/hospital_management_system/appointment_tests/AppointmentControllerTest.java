@@ -7,6 +7,7 @@ import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.PhysicianAppointmentDTO;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
+import com.capgemini.hospital_management_system.mapper.PatientMapper;
 import com.capgemini.hospital_management_system.model.*;
 import com.capgemini.hospital_management_system.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AppointmentController.class)
@@ -40,6 +43,9 @@ public class AppointmentControllerTest {
 
     @MockitoBean
     private AppointmentMapper appointmentMapper;
+
+    @MockitoBean
+    private PatientMapper patientMapper;
 
     @Test
     @DisplayName("Get all appointments")
@@ -120,5 +126,28 @@ public class AppointmentControllerTest {
                 .andExpect(result -> Assertions.assertEquals("No appointments found!",
                         result.getResolvedException().getMessage()));
     }
+
+    @Test
+    @DisplayName("Get patient by appointment ID")
+    void fetchPatientFromAppointmentId_ReturnsPatientDto() throws Exception {
+
+        Patient patient = new Patient(123, "John", "abc", "1234556", 12345, new Physician(),
+                new HashSet<>(), new HashSet<>(),new HashSet<>(),new HashSet<>());
+
+        PatientAppointmentDTO patientDTO = new PatientAppointmentDTO("John", "abc", "1234556", 12345);
+
+        Mockito.when(appointmentRepository.findPatientByAppointmentId(111)).thenReturn(Optional.of(patient));
+        Mockito.when(patientMapper.toDto(patient)).thenReturn(patientDTO);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/patient/111"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found the patient's appointment"))
+                .andExpect(jsonPath("$.data.name").value("John"))
+                .andExpect(jsonPath("$.data.address").value("abc"))
+                .andExpect(jsonPath("$.data.phone").value("1234556"))
+                .andExpect(jsonPath("$.data.insuranceId").value(12345));
+    }
+
 
 }
