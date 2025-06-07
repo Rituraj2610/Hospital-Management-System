@@ -216,5 +216,38 @@ public class AppointmentControllerTest {
                 .andExpect(jsonPath("$.data").value("e1"));
     }
 
+    @Test
+    @DisplayName("Get physician by patient ID")
+    void fetchPhysicianFromPatientId_ReturnsListOfPhysicians() throws Exception {
+
+        List<Appointment> appointments = getAppointments();
+        PhysicianAppointmentDTO physicianAppointmentDTO = new PhysicianAppointmentDTO(111, "p1", "nice", 1111);
+        List<PhysicianAppointmentDTO> physicianAppointmentDTOS = List.of(physicianAppointmentDTO);
+
+        Mockito.when(appointmentRepository.findByPatient_Ssn(222)).thenReturn(appointments);
+        Mockito.when(physicianMapper.toDto(Mockito.any(Physician.class)))
+                .thenReturn(new PhysicianAppointmentDTO(111, "p1", "nice", 1111));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/physician/patient/222"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found the physicians"))
+                .andExpect(jsonPath("$.data[0].employeeId").value(111))
+                .andExpect(jsonPath("$.data[0].name").value("p1"))
+                .andExpect(jsonPath("$.data[0].position").value("nice"))
+                .andExpect(jsonPath("$.data[0].ssn").value(1111));
+    }
+
+    private static List<Appointment> getAppointments() {
+        Physician physician = new Physician(111, "p1", "nice", 1111, new HashSet<>(), new HashSet<>(),
+                new HashSet<>(),new HashSet<>(),new HashSet<>(),new HashSet<>(),new HashSet<>());
+
+        Patient patient = new Patient(123, "John", "abc", "1234556", 12345, new Physician(),
+                new HashSet<>(), new HashSet<>(),new HashSet<>(),new HashSet<>());
+
+        Appointment appointment1 = new Appointment(111, patient, new Nurse(), physician, LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
+        List<Appointment> appointments = List.of(appointment1);
+        return appointments;
+    }
 
 }
