@@ -76,7 +76,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/patient/{appointmentid}")
-    public ResponseEntity<Response<PatientAppointmentDTO>> fetchPatientFromAppointmentId(@PathVariable Integer appointmentid){
+    public ResponseEntity<Response<PatientAppointmentDTO>> fetchPatientByAppointmentId(@PathVariable Integer appointmentid){
         Optional<Patient> optionalPatient = appointmentRepository.findPatientByAppointmentId(appointmentid);
         if(optionalPatient.isEmpty()){
             throw new EntityNotFoundException("Patient not found!");
@@ -91,7 +91,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/physician/{appointmentid}")
-    public ResponseEntity<Response<PhysicianAppointmentDTO>> fetchPhysicianFromAppointmentId(@PathVariable Integer appointmentid){
+    public ResponseEntity<Response<PhysicianAppointmentDTO>> findPhysicianByAppointmentId(@PathVariable Integer appointmentid){
         Optional<Physician> optionalPhysician = appointmentRepository.findPhysicianByAppointmentId(appointmentid);
         if(optionalPhysician.isEmpty()){
             throw new EntityNotFoundException("Physician not found!");
@@ -106,8 +106,8 @@ public class AppointmentController {
     }
 
     @GetMapping("/nurse/{appointmentid}")
-    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseFromAppointmentId(@PathVariable Integer appointmentid){
-        Optional<Nurse> optionalNurse = appointmentRepository.fetchNurseFromAppointmentId(appointmentid);
+    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByAppointmentId(@PathVariable Integer appointmentid){
+        Optional<Nurse> optionalNurse = appointmentRepository.fetchNurseByAppointmentId(appointmentid);
         if(optionalNurse.isEmpty()){
             throw new EntityNotFoundException("Nurse not found!");
         }

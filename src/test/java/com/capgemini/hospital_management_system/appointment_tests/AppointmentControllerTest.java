@@ -7,6 +7,7 @@ import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.PhysicianAppointmentDTO;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
+import com.capgemini.hospital_management_system.mapper.NurseMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
 import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
 import com.capgemini.hospital_management_system.model.*;
@@ -50,6 +51,9 @@ public class AppointmentControllerTest {
 
     @MockitoBean
     private PhysicianMapper physicianMapper;
+
+    @MockitoBean
+    private NurseMapper nurseMapper;
 
     @Test
     @DisplayName("Get all appointments")
@@ -172,6 +176,28 @@ public class AppointmentControllerTest {
                 .andExpect(jsonPath("$.data.employeeId").value(111))
                 .andExpect(jsonPath("$.data.name").value("p1"))
                 .andExpect(jsonPath("$.data.position").value("nice"))
+                .andExpect(jsonPath("$.data.ssn").value(1111));
+    }
+
+    @Test
+    @DisplayName("Get nurse by appointment ID")
+    void fetchNurseFromAppointmentId_ReturnsNurseDto() throws Exception {
+
+        Nurse nurse = new Nurse(111, "n1", "head", true, 1111,
+                new HashSet<>(), new HashSet<>(), new HashSet<>());
+
+        NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO("n1", "head", true, 1111);
+
+        Mockito.when(appointmentRepository.fetchNurseByAppointmentId(111)).thenReturn(Optional.of(nurse));
+        Mockito.when(nurseMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/nurse/111"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found the nurse's appointment"))
+                .andExpect(jsonPath("$.data.name").value("n1"))
+                .andExpect(jsonPath("$.data.position").value("head"))
+                .andExpect(jsonPath("$.data.registered").value(true))
                 .andExpect(jsonPath("$.data.ssn").value(1111));
     }
 
