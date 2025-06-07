@@ -1,6 +1,7 @@
 package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.*;
+import com.capgemini.hospital_management_system.exception.EntityAlreadyExist;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
 import com.capgemini.hospital_management_system.mapper.NurseMapper;
@@ -14,10 +15,7 @@ import com.capgemini.hospital_management_system.repository.AppointmentRepository
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -210,7 +208,22 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping
+    public ResponseEntity<Response<String>> addAppointment(@RequestBody AppointmentPostDTO appointmentPostDTO){
+//        Optional<Appointment> optionalAppointment = appointmentRepository.findById(appointmentPostDTO.getAppointmentId());
+//        if(optionalAppointment.isEmpty()){
+//            throw new EntityAlreadyExist("Appointment with same id already exists!");
+//        }
+        Appointment appointment = appointmentMapper.toEntity(appointmentPostDTO);
+        appointmentRepository.save(appointment);
+        Response<String> response = Response.<String>builder()
+                .status(201)
+                .message("Record created successfully")
+                .data("Appointment with id: " + appointmentPostDTO.getAppointmentId() + " created successfully!")
+                .build();
 
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
 
 
