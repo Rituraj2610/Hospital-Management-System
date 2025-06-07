@@ -2,11 +2,18 @@ package com.capgemini.hospital_management_system.mapper;
 
 import com.capgemini.hospital_management_system.dto.NurseDto;
 import com.capgemini.hospital_management_system.model.Nurse;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
 @Component
 public class NurseMapper {
 
+	//post mapper
+	
     public NurseDto toDto(Nurse nurse) {
         if (nurse == null) return null;
 
@@ -32,4 +39,21 @@ public class NurseMapper {
 
         return nurse;
     }
+
+    public List<NurseDto> toDtoList(List<Nurse> nurses) {
+        return nurses.stream()
+                     .map(this::toDto) 
+                     .collect(Collectors.toList());
+    }
+
+	public NurseDto toDto(Optional<Nurse> nurse) {
+		// TODO Auto-generated method stub
+		return this.toDto(nurse);
+	}
+
+	
+
+    
+    
+    
 }

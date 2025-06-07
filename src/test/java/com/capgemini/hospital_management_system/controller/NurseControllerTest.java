@@ -6,16 +6,18 @@ import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.repository.NurseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,7 +38,6 @@ class NurseControllerTest {
 
     @Test
     void testAddNurseDetails() throws Exception {
-        // Given
         NurseDto dto = new NurseDto();
         dto.setEmployeeId(1);
         dto.setName("Jane Doe");
@@ -51,18 +52,59 @@ class NurseControllerTest {
         nurseEntity.setRegistered(true);
         nurseEntity.setSsn(123456);
 
-        // When
-        Mockito.when(nurseMapper.toEntity(any(NurseDto.class))).thenReturn(nurseEntity);
-        Mockito.when(nurseRepository.save(any(Nurse.class))).thenReturn(nurseEntity);
-        Mockito.when(nurseMapper.toDto(any(Nurse.class))).thenReturn(dto);
+        when(nurseMapper.toEntity(any(NurseDto.class))).thenReturn(nurseEntity);
+        when(nurseRepository.save(any(Nurse.class))).thenReturn(nurseEntity);
+        when(nurseMapper.toDto(any(Nurse.class))).thenReturn(dto);
 
-        // Then
         mockMvc.perform(post("/api/nurse")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Nurse saved successfully"))
                 .andExpect(jsonPath("$.data.name").value("Jane Doe"));
+    }
+
+    @Test
+    void testGetNurseDetails() throws Exception {
+        Nurse nurse = new Nurse();
+        nurse.setEmployeeId(1);
+        nurse.setName("John Smith");
+
+        NurseDto nurseDto = new NurseDto();
+        nurseDto.setEmployeeId(1);
+        nurseDto.setName("John Smith");
+
+        List<Nurse> nurses = List.of(nurse);
+        List<NurseDto> nurseDtos = List.of(nurseDto);
+
+        when(nurseRepository.findAll()).thenReturn(nurses);
+        when(nurseMapper.toDtoList(nurses)).thenReturn(nurseDtos);
+
+        mockMvc.perform(get("/api/nurse"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Nurses retrieved successfully"))
+                .andExpect(jsonPath("$.data[0].name").value("John Smith"));
+    }
+
+    @Test
+    void testGetNurseDetailsById() throws Exception {
+        Nurse nurse = new Nurse();
+        nurse.setEmployeeId(1);
+        nurse.setName("John Smith");
+
+        NurseDto nurseDto = new NurseDto();
+        nurseDto.setEmployeeId(1);
+        nurseDto.setName("John Smith");
+
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
+        when(nurseMapper.toDto(nurse)).thenReturn(nurseDto);
+
+        mockMvc.perform(get("/api/nurse/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Nurse with employee ID 1 retrieved successfully"))
+                .andExpect(jsonPath("$.data.name").value("John Smith"));
     }
 }

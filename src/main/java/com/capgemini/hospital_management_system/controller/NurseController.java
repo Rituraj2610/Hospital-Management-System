@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -19,9 +22,9 @@ public class NurseController {
     private final NurseRepository nurseRepository;
     private final NurseMapper nurseMapper;
 
+    // Saving nurse details
     @PostMapping("/nurse")
     public ResponseEntity<Response<NurseDto>> addNurseDetails(@RequestBody NurseDto req) {
-
         Nurse nurse = nurseMapper.toEntity(req);
         nurseRepository.save(nurse);
         NurseDto responseDto = nurseMapper.toDto(nurse);
@@ -34,5 +37,55 @@ public class NurseController {
                 LocalDateTime.now()
             )
         );
+    }
+
+    // Getting all nurse details
+    @GetMapping("/nurse")
+    public ResponseEntity<Response<List<NurseDto>>> getNurseDetails() {
+        List<Nurse> nurses = nurseRepository.findAll();
+
+        if (nurses.isEmpty()) {
+            return ResponseEntity.status(404).body(
+                new Response<>(
+                    404,
+                    "No nurses found",
+                    null,
+                    LocalDateTime.now()
+                )
+            );
+        }
+
+        List<NurseDto> responseDto = nurseMapper.toDtoList(nurses);
+        return ResponseEntity.ok(new Response<>(
+            200,
+            "Nurses retrieved successfully",
+            responseDto,
+            LocalDateTime.now()
+        ));
+    }
+
+    // Getting nurse by ID
+    @GetMapping("/nurse/{empid}")
+    public ResponseEntity<Response<NurseDto>> getNurseById(@PathVariable("empid") Integer id) {
+        Optional<Nurse> nurse = nurseRepository.findById(id);
+
+        if (nurse.isEmpty()) {
+            return ResponseEntity.status(404).body(
+                new Response<>(
+                    404,
+                    "Nurse with employee ID " + id + " not found",
+                    null,
+                    LocalDateTime.now()
+                )
+            );
+        }
+
+        NurseDto responseDto = nurseMapper.toDto(nurse.get());
+        return ResponseEntity.ok(new Response<>(
+            200,
+            "Nurse with employee ID " + responseDto.getEmployeeId() + " retrieved successfully",
+            responseDto,
+            LocalDateTime.now()
+        ));
     }
 }
