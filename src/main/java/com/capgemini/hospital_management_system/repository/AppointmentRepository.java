@@ -26,4 +26,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     @Query("SELECT a.prepNurse FROM Appointment a WHERE a.appointmentId = :appointmentid")
     Optional<Nurse> fetchNurseByAppointmentId(@Param("appointmentid") Integer appointmentid);
+
+    @Query("SELECT a.examinationRoom FROM Appointment a WHERE a.appointmentId = :id")
+    String findExaminationRoomByAppointmentId(@Param("id") Integer appointmentId);
+
 }

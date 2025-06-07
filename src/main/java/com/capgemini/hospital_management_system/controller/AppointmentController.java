@@ -120,7 +120,20 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/examinationroom/{appointmentid}")
+    public ResponseEntity<Response<String>> fetchRoomByAppointmentId(@PathVariable Integer appointmentid){
+        String room = appointmentRepository.findExaminationRoomByAppointmentId(appointmentid);
+        if(room.isEmpty()){
+            throw  new EntityNotFoundException("Room not found");
+        }
+        Response<String> response = Response.<String>builder()
+                .status(200)
+                .message("Found the room")
+                .data(room)
+                .build();
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 
