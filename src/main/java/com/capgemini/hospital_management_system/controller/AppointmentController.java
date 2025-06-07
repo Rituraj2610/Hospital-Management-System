@@ -5,6 +5,7 @@ import com.capgemini.hospital_management_system.exception.EntityNotFoundExceptio
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
 import com.capgemini.hospital_management_system.mapper.NurseMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
+import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.model.Patient;
@@ -31,6 +32,7 @@ public class AppointmentController {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentMapper appointmentMapper;
     private final PatientMapper patientMapper;
+    private final PhysicianMapper physicianMapper;
 
     @GetMapping
     public ResponseEntity<Response<List<AppointmentDTO>>> fetchAllAppointments(){
@@ -82,6 +84,21 @@ public class AppointmentController {
                 .status(200)
                 .message("Found the patient's appointment")
                 .data(patientMapper.toDto(optionalPatient.get()))
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/physician/{appointmentid}")
+    public ResponseEntity<Response<PhysicianAppointmentDTO>> fetchPhysicianFromAppointmentId(@PathVariable Integer appointmentid){
+        Optional<Physician> optionalPhysician = appointmentRepository.findPhysicianByAppointmentId(appointmentid);
+        if(optionalPhysician.isEmpty()){
+            throw new EntityNotFoundException("Patient not found!");
+        }
+        Response<PhysicianAppointmentDTO> response = Response.<PhysicianAppointmentDTO>builder()
+                .status(200)
+                .message("Found the physician's appointment")
+                .data(physicianMapper.toDto(optionalPhysician.get()))
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
