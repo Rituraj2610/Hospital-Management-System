@@ -102,6 +102,25 @@ public class NurseController {
             )
         );
     }
+    
+    //accessing status for nurse by id
+    
+    @GetMapping("/nurse/registered/{empid}")
+    public ResponseEntity<Response<Boolean>> isNurseRegistered(@PathVariable("empid") Integer id) {
+        Optional<Nurse> nurse = nurseRepository.findById(id);
+        
+        if (nurse.isEmpty()) {
+            throw new EntityNotFoundException("Nurse with ID " + id + " does not exist");
+        }
 
+        return ResponseEntity.ok(
+            new Response<>(
+                200,
+                "Registered status retrieved successfully for employee ID " + id,
+                nurse.get().getRegistered(),
+                LocalDateTime.now()
+            )
+        );
+    }
 
 }

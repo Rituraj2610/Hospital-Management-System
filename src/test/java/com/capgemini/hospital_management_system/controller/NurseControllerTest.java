@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Optional;
 
+import javax.net.ssl.SSLEngineResult.Status;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -36,6 +38,7 @@ class NurseControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    //adding nurse details
     @Test
     void testAddNurseDetails() throws Exception {
         NurseDto dto = new NurseDto();
@@ -65,6 +68,7 @@ class NurseControllerTest {
                 .andExpect(jsonPath("$.data.name").value("Jane Doe"));
     }
 
+    // accessing all nurse details
     @Test
     void testGetNurseDetails() throws Exception {
         Nurse nurse = new Nurse();
@@ -88,6 +92,7 @@ class NurseControllerTest {
                 .andExpect(jsonPath("$.data[0].name").value("John Smith"));
     }
 
+    //accessing nurse details by id
     @Test
     void testGetNurseDetailsById() throws Exception {
         Nurse nurse = new Nurse();
@@ -108,6 +113,7 @@ class NurseControllerTest {
                 .andExpect(jsonPath("$.data.name").value("John Smith"));
     }
     
+    //testing for accessing position by id
     @Test
     void testGetPositionById() throws Exception {
         Nurse nurse = new Nurse();
@@ -123,6 +129,23 @@ class NurseControllerTest {
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Position retrieved successfully for employee ID 1"))
                 .andExpect(jsonPath("$.data").value("Head Nurse"));
+    }
+    
+    //testing for accessing registered status for nurse
+    
+    @Test
+    public void testGetRegisteredStatus() throws Exception{
+    	Nurse nurse = new Nurse();
+    	nurse.setEmployeeId(1);
+    	nurse.setRegistered(true);
+    	
+    	when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
+    	
+    	mockMvc.perform(get("/api/nurse/registered/1"))
+    	.andExpect(status().isOk())
+    	.andExpect(jsonPath("$.status").value(200))
+    	.andExpect(jsonPath("$.message").value("Registered status retrieved successfully for employee ID 1"))
+    	.andExpect(jsonPath("$.data").value("true"));
     }
 
 }
