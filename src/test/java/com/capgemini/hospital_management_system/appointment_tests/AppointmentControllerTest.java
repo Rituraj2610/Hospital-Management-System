@@ -8,6 +8,7 @@ import com.capgemini.hospital_management_system.dto.PhysicianAppointmentDTO;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
+import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
 import com.capgemini.hospital_management_system.model.*;
 import com.capgemini.hospital_management_system.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +47,9 @@ public class AppointmentControllerTest {
 
     @MockitoBean
     private PatientMapper patientMapper;
+
+    @MockitoBean
+    private PhysicianMapper physicianMapper;
 
     @Test
     @DisplayName("Get all appointments")
@@ -147,6 +151,28 @@ public class AppointmentControllerTest {
                 .andExpect(jsonPath("$.data.address").value("abc"))
                 .andExpect(jsonPath("$.data.phone").value("1234556"))
                 .andExpect(jsonPath("$.data.insuranceId").value(12345));
+    }
+
+    @Test
+    @DisplayName("Get physician by appointment ID")
+    void fetchPhysicianFromAppointmentId_ReturnsPhysicianDto() throws Exception {
+
+        Physician physician = new Physician(111, "p1", "nice", 1111, new HashSet<>(), new HashSet<>(),
+                new HashSet<>(),new HashSet<>(),new HashSet<>(),new HashSet<>(),new HashSet<>());
+
+        PhysicianAppointmentDTO physicianAppointmentDTO = new PhysicianAppointmentDTO(111, "p1", "nice", 1111);
+
+        Mockito.when(appointmentRepository.findPhysicianByAppointmentId(111)).thenReturn(Optional.of(physician));
+        Mockito.when(physicianMapper.toDto(physician)).thenReturn(physicianAppointmentDTO);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/physician/111"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found the physician's appointment"))
+                .andExpect(jsonPath("$.data.employeeId").value(111))
+                .andExpect(jsonPath("$.data.name").value("p1"))
+                .andExpect(jsonPath("$.data.position").value("nice"))
+                .andExpect(jsonPath("$.data.ssn").value(1111));
     }
 
 
