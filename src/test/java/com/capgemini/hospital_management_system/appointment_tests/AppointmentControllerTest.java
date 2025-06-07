@@ -201,5 +201,20 @@ public class AppointmentControllerTest {
                 .andExpect(jsonPath("$.data.ssn").value(1111));
     }
 
+    @Test
+    @DisplayName("Get room by appointment ID")
+    void fetchRoomFromAppointmentId_ReturnsStringRoom() throws Exception {
+
+        Appointment appointment1 = new Appointment(111, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
+
+        Mockito.when(appointmentRepository.findExaminationRoomByAppointmentId(111)).thenReturn(appointment1.getExaminationRoom());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/examinationroom/111"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Found the room"))
+                .andExpect(jsonPath("$.data").value("e1"));
+    }
+
 
 }
