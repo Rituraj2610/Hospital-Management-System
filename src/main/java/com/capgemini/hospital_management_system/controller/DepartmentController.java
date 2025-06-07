@@ -94,6 +94,27 @@ public class DepartmentController {
 
     }
 
+    @GetMapping("/head/{deptId}")
+    public ResponseEntity<Response<PhysicianDepartmentDto>> getDepartmentHeadDetailsById(@PathVariable Integer deptId){
+
+        Department department = departmentRepository.findById(deptId)
+                .orElseThrow(() -> new EntityNotFoundException("Department with id " + deptId + " not found"));
+
+        Physician head = department.getHead();
+
+        PhysicianDepartmentDto physicianDepartmentDto = modelMapper.map(head , PhysicianDepartmentDto.class);
+
+        Response<PhysicianDepartmentDto> response = Response.<PhysicianDepartmentDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Physician fetched successfully")
+                .data(physicianDepartmentDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response , HttpStatus.FOUND);
+
+    }
+
 
 
 }
