@@ -193,6 +193,22 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/nurse/{patientid}/{date}")
+    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByPatientIdByStartDate(@PathVariable Integer patientid, @PathVariable LocalDateTime date){
+        Optional<Appointment> optionalAppointment = appointmentRepository.findByStartAndPatient_Ssn(date, patientid);
+        if(optionalAppointment.isEmpty()){
+            throw  new EntityNotFoundException("No appointment found");
+        }
+
+        NurseAppointmentDTO nurseAppointmentDTO = nurseMapper.toDto(optionalAppointment.get().getPrepNurse());
+        Response<NurseAppointmentDTO> response = Response.<NurseAppointmentDTO>builder()
+                .status(200)
+                .message("Found the nurse")
+                .data(nurseAppointmentDTO)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 
