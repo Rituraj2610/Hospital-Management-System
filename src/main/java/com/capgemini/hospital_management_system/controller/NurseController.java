@@ -122,5 +122,25 @@ public class NurseController {
             )
         );
     }
+    
+    @PutMapping("/nurse/registered/{empid}")
+    public ResponseEntity<Response<Boolean>> updateRegisteredStatus(
+            @PathVariable("empid") Integer id,
+            @RequestBody Boolean registered) {
+
+        Nurse nurse = nurseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Nurse with ID " + id + " does not exist"));
+
+        nurse.setRegistered(registered);
+        nurseRepository.save(nurse);
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "Registered status updated successfully for employee ID " + id,
+                nurse.getRegistered(), 
+                LocalDateTime.now()
+        ));
+    }
+
 
 }

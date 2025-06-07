@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(NurseController.class)
@@ -146,6 +147,30 @@ class NurseControllerTest {
     	.andExpect(jsonPath("$.status").value(200))
     	.andExpect(jsonPath("$.message").value("Registered status retrieved successfully for employee ID 1"))
     	.andExpect(jsonPath("$.data").value("true"));
+    }
+    
+    
+    //testing for updating registered status for nurse
+    @Test
+    public void testUpdateRegisteredStatus() throws Exception {
+        Nurse nurse = new Nurse();
+        nurse.setEmployeeId(1);
+        nurse.setRegistered(false);  
+
+        when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
+
+        boolean newStatus = true;
+
+        nurse.setRegistered(newStatus);
+        when(nurseRepository.save(any(Nurse.class))).thenReturn(nurse);
+
+        mockMvc.perform(put("/api/nurse/registered/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("true"))  // raw boolean, not JSON object
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("Registered status updated successfully for employee ID 1"))
+            .andExpect(jsonPath("$.data").value(true));
     }
 
 }
