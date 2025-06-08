@@ -177,5 +177,30 @@ public class DepartmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PutMapping("/update/deptname/{deptid}")
+    public ResponseEntity<Response<DepartmentDto>> updateDepartmentName(
+            @PathVariable Integer deptid,
+            @RequestParam String newName) {
+
+        Department department = departmentRepository.findById(deptid)
+                .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + deptid));
+
+        department.setName(newName);
+        departmentRepository.save(department);
+
+        DepartmentDto departmentDto = modelMapper.map(department, DepartmentDto.class);
+        PhysicianDepartmentDto physicianDepartmentDto = modelMapper.map(department.getHead() , PhysicianDepartmentDto.class);
+
+        departmentDto.setPhysicianDetail(physicianDepartmentDto);
+
+        Response<DepartmentDto> response = Response.<DepartmentDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Department name updated successfully")
+                .data(departmentDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
     
 }
