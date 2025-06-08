@@ -9,10 +9,12 @@ spring:
     password: root
 
     #REMOTE DB
+
 #    url: jdbc:mysql://localhost:3306/hospital_management_server
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #    username: aman
 #    password: pass@123
+
 
   jpa:
     hibernate:
