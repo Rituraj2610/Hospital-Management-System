@@ -1,9 +1,6 @@
 package com.capgemini.hospital_management_system.controller;
 
-import com.capgemini.hospital_management_system.dto.DepartmentDto;
-import com.capgemini.hospital_management_system.dto.PhysicianDepartmentDto;
-import com.capgemini.hospital_management_system.dto.Response;
-import com.capgemini.hospital_management_system.dto.UpdateDepartmentHeadRequest;
+import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
@@ -32,6 +29,38 @@ public class DepartmentController {
 
     @Autowired
     private ModelMapper modelMapper;
+
+
+
+    @PostMapping
+    public ResponseEntity<Response<DepartmentDto>> createDepartment(@RequestBody CreateDepartmentDto createDepartmentDto) {
+
+        Physician physician = physicianRepository.findById(createDepartmentDto.getPhysicianId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Physician not found with ID: " + createDepartmentDto.getPhysicianId()));
+
+        Department department = new Department();
+        department.setDepartmentId(createDepartmentDto.getDeptId());
+        department.setName(createDepartmentDto.getName());
+        department.setHead(physician);
+
+        Department savedDepartment = departmentRepository.save(department);
+
+        DepartmentDto responseDto = modelMapper.map(savedDepartment , DepartmentDto.class);
+
+        PhysicianDepartmentDto physicianDto = modelMapper.map(physician, PhysicianDepartmentDto.class);
+        responseDto.setPhysicianDetail(physicianDto);
+
+        Response<DepartmentDto> response = Response.<DepartmentDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Department created successfully")
+                .data(responseDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
 
 
     @GetMapping("/")
@@ -202,5 +231,7 @@ public class DepartmentController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    
+
+
+
 }
