@@ -11,8 +11,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Data
 public class OnCallId implements Serializable {
-    private Integer nurseId;
-    private BlockId blockId;
+    private Integer nurse;
+    private Integer blockFloor;
+    private Integer blockCode;
     private LocalDateTime onCallStart;
     private LocalDateTime onCallEnd;
 
