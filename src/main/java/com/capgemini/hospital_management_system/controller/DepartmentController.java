@@ -3,6 +3,7 @@ package com.capgemini.hospital_management_system.controller;
 import com.capgemini.hospital_management_system.dto.DepartmentDto;
 import com.capgemini.hospital_management_system.dto.PhysicianDepartmentDto;
 import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.dto.UpdateDepartmentHeadRequest;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
@@ -12,10 +13,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -149,10 +148,34 @@ public class DepartmentController {
         return new ResponseEntity<>(isHead , HttpStatus.OK);
     }
 
+    @PutMapping("/update/headid/{deptId}")
+    public ResponseEntity<Response<DepartmentDto>> updateDepartmentHead(
+            @PathVariable Integer deptId,
+            @RequestBody UpdateDepartmentHeadRequest request) {
 
+        Department department = departmentRepository.findById(deptId)
+                .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + deptId));
 
+        Physician newHead = physicianRepository.findById(request.getPhysicianId())
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found with id: " + request.getPhysicianId()));
 
+        department.setHead(newHead);
+        departmentRepository.save(department);
 
+        DepartmentDto departmentDto = modelMapper.map(department, DepartmentDto.class);
+        PhysicianDepartmentDto physicianDto = modelMapper.map(newHead, PhysicianDepartmentDto.class);
 
+        departmentDto.setPhysicianDetail(physicianDto);
 
+        Response<DepartmentDto> response = Response.<DepartmentDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Department head updated successfully")
+                .data(departmentDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    
 }
