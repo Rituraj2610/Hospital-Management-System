@@ -168,25 +168,25 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/nurse/patient/{patientid}")
-    public ResponseEntity<Response<List<NurseAppointmentDTO>>> fetchNurseByPatientId(@PathVariable Integer patientid){
-        List<Appointment> appointmentList = appointmentRepository.findByPatient_Ssn(patientid);
-        if(appointmentList.isEmpty()){
-            throw  new EntityNotFoundException("No appoinments found");
-        }
-        List<NurseAppointmentDTO> nurseAppointmentDTOList = appointmentList.stream()
-                .filter(appointment -> appointment.getPrepNurse() != null)
-                .map(appointment -> nurseMapper.toDto(appointment.getPrepNurse()))
-                .toList();
-
-        Response<List<NurseAppointmentDTO>> response = Response.<List<NurseAppointmentDTO>>builder()
-                .status(200)
-                .message("Found the nurses")
-                .data(nurseAppointmentDTOList)
-                .build();
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+//    @GetMapping("/nurse/patient/{patientid}")
+//    public ResponseEntity<Response<List<NurseAppointmentDTO>>> fetchNurseByPatientId(@PathVariable Integer patientid){
+//        List<Appointment> appointmentList = appointmentRepository.findByPatient_Ssn(patientid);
+//        if(appointmentList.isEmpty()){
+//            throw  new EntityNotFoundException("No appoinments found");
+//        }
+//        List<NurseAppointmentDTO> nurseAppointmentDTOList = appointmentList.stream()
+//                .filter(appointment -> appointment.getPrepNurse() != null)
+//                .map(appointment -> nurseMapper.toDto(appointment.getPrepNurse()))
+//                .toList();
+//
+//        Response<List<NurseAppointmentDTO>> response = Response.<List<NurseAppointmentDTO>>builder()
+//                .status(200)
+//                .message("Found the nurses")
+//                .data(nurseAppointmentDTOList)
+//                .build();
+//
+//        return new ResponseEntity<>(response, HttpStatus.OK);
+//    }
 
     @GetMapping("/nurse/{patientid}/{date}")
     public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByPatientIdByStartDate(@PathVariable Integer patientid, @PathVariable LocalDateTime date){
