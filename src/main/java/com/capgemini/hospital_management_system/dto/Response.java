@@ -15,6 +15,8 @@ public class Response<T> {
     private int status;
     private String message;
     private T data;
-    private LocalDateTime time;
+
+    @Builder.Default
+    private LocalDateTime time = LocalDateTime.now();
 }
 
