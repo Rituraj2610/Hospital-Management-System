@@ -1,7 +1,6 @@
 package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.*;
-import com.capgemini.hospital_management_system.exception.EntityAlreadyExist;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
 import com.capgemini.hospital_management_system.mapper.NurseMapper;
@@ -18,10 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @RestController

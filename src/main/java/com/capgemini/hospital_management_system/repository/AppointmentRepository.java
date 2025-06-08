@@ -33,4 +33,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     List<Appointment> findByPatient_Ssn(Integer ssn);
 
     Optional<Appointment> findByStartAndPatient_Ssn(LocalDateTime start, Integer ssn);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
