@@ -18,7 +18,7 @@ import java.util.Set;
 public class Patient {
     @Id
     @Column(name = "SSN")
-    private Long ssn;
+    private Integer ssn;
 
     @Column(name = "Name", nullable = false)
     private String name;
@@ -35,7 +35,7 @@ public class Patient {
     @ManyToOne
     @JoinColumn(name = "PCP", nullable = false)
     @JsonBackReference
-    private Physician pcp;
+    private Physician PCP;
 
     @OneToMany(mappedBy = "patient")
     @JsonManagedReference
