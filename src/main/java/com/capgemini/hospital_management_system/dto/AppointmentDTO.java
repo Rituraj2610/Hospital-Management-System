@@ -16,9 +16,9 @@ public class AppointmentDTO {
     private LocalDateTime start;
     private LocalDateTime end;
     private String examinationRoom;
-    private Physician physician;
-    private Nurse nurse;
-    private Patient patient;
+    private PhysicianAppointmentDTO physician;
+    private NurseAppointmentDTO nurse;
+    private PatientAppointmentDTO patient;
 
     // constructors, getters, setters
 }
