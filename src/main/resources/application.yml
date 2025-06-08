@@ -3,20 +3,22 @@ spring:
     name: hospital-management-system
   datasource:
     #LOCAL DB
-#    url: jdbc:mysql://localhost:3306/hospital_management_system
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    username: root
-#    password: root
-
-    #REMOTE DB
-    url: jdbc:mysql://<ip>:3306/hospital_management_server
+    url: jdbc:mysql://localhost:3306/hms
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: aman
-    password: pass@123
+    username: root
+    password: aditi@30
+
+#    #REMOTE DB
+#    url: jdbc:mysql://localhost:3306/hospital_management_server
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    username: aman
+#    password: pass@123
 
   jpa:
     hibernate:
       ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
     properties:
       hibernate:
