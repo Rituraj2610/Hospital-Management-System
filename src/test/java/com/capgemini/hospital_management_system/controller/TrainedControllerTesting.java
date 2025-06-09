@@ -14,6 +14,7 @@ import com.capgemini.hospital_management_system.repository.TrainedInRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -131,5 +132,38 @@ public class TrainedControllerTesting {
                 .andExpect(jsonPath("$.data[0].code").value(1))
                 .andExpect(jsonPath("$.data[0].name").value("X-Ray"));
                 
+    }
+    
+    @Test
+    void testGetTreatmentsByPhysician() throws Exception {
+        Integer physicianId = 1;
+
+        // Mock entities
+        Procedure mockProcedure = new Procedure();
+        mockProcedure.setCode(101);
+        mockProcedure.setName("Heart Surgery");
+
+        TrainedIn mockTrainedIn = new TrainedIn();
+        mockTrainedIn.setTreatment(mockProcedure);
+
+        ProcedureTrainedInDTO dto = new ProcedureTrainedInDTO();
+        dto.setCode(101);
+        dto.setName("Heart Surgery");
+
+        // Mock behavior
+        Mockito.when(trainedInRepository.findByPhysicianEmployeeId(physicianId))
+               .thenReturn(List.of(mockTrainedIn));
+        Mockito.when(procedureTrainedInMapping.toDTO(mockProcedure))
+               .thenReturn(dto);
+
+        // Perform GET request
+        mockMvc.perform(get("/api/trained_in/treatment/{physicianId}", physicianId)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.message").value("Procedures for physician " + physicianId + " fetched successfully"))
+            .andExpect(jsonPath("$.data[0].code").value(101))
+            .andExpect(jsonPath("$.data[0].name").value("Heart Surgery"));
+          
     }
 }
