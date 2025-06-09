@@ -7,15 +7,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class PatientAppointmentDTO {
-
+public class ProcedureDTO {
+    private Integer code;
     private String name;
-
-    private String address;
-
-    private String phone;
-
-    private Integer insuranceId;
-  
-    private Integer ssn;
+    private Double cost;
 }

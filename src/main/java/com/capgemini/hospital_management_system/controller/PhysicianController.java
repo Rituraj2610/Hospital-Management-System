@@ -17,7 +17,7 @@ public class PhysicianController {
 
     @Autowired
     private PhysicianRepository physicianRepository;
-    
+
     @GetMapping("/name/{name}")
     public ResponseEntity<Response<PhysicianDto>> getPhysicianByName(@PathVariable String name) {
         // Find Physician by name
