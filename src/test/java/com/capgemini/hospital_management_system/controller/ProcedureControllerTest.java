@@ -133,5 +133,16 @@ public class ProcedureControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Procedure cost updated successfully.", response.getBody());
     }
+    @Test
+    void testUpdateProcedureCostNotFound() {
+        when(procedureRepository.findById(999)).thenReturn(Optional.empty());
+
+        Map<String, Double> body = new HashMap<>();
+        body.put("cost", 999.0);
+
+        ResponseEntity<?> response = procedureController.updateProcedureCost(999, body);
+
+        assertEquals(404, response.getStatusCodeValue());
+    }
 
 }
