@@ -106,6 +106,26 @@ public class ProcedureController {
 
         return ResponseEntity.ok("Procedure cost updated successfully.");
     }
+    @PutMapping("/name/{id}")
+    public ResponseEntity<?> updateProcedureName(
+            @PathVariable Integer id,
+            @RequestBody Map<String, String> body) {
+
+        // Extract name from request body
+        String newName = body.get("name");
+
+        // Find the procedure by ID
+        Optional<Procedure> optionalProcedure = procedureRepository.findById(id);
+        if (optionalProcedure.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Update name and save
+        Procedure procedure = optionalProcedure.get();
+        procedure.setName(newName);
+        procedureRepository.save(procedure);
+        return ResponseEntity.ok("Procedure name updated successfully.");
+    }
 
 
 
