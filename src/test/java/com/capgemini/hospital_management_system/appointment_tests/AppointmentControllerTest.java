@@ -7,7 +7,7 @@ import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.PhysicianAppointmentDTO;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
-import com.capgemini.hospital_management_system.mapper.NurseMapper;
+import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
 import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
 import com.capgemini.hospital_management_system.model.*;
@@ -53,7 +53,7 @@ public class AppointmentControllerTest {
     private PhysicianMapper physicianMapper;
 
     @MockitoBean
-    private NurseMapper nurseMapper;
+    private NurseCustomMapper nurseCustomMapper;
 
     @Test
     @DisplayName("Get all appointments")
@@ -189,7 +189,7 @@ public class AppointmentControllerTest {
         NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO("n1", "head", true, 1111);
 
         Mockito.when(appointmentRepository.fetchNurseByAppointmentId(111)).thenReturn(Optional.of(nurse));
-        Mockito.when(nurseMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
+        Mockito.when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/nurse/111"))
                 .andExpect(status().isOk())
@@ -280,7 +280,7 @@ public class AppointmentControllerTest {
         NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO("n1", "head", true, 1111);
 
         Mockito.when(appointmentRepository.findByPatient_Ssn(222)).thenReturn(appointments);
-        Mockito.when(nurseMapper.toDto(Mockito.any(Nurse.class))).thenReturn(nurseAppointmentDTO);
+        Mockito.when(nurseCustomMapper.toDto(Mockito.any(Nurse.class))).thenReturn(nurseAppointmentDTO);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/nurse/patient/222"))
                 .andExpect(status().isOk())
