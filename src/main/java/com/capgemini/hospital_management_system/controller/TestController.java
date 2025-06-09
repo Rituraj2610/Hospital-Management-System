@@ -11,4 +11,9 @@ public class TestController {
     public String testConctoller(){
         return "Hello I am Batman";
     }
+
+    @GetMapping("t1")
+    public String test1Conctoller(){
+        return "Hello I am Vengeance";
+    }
 }
