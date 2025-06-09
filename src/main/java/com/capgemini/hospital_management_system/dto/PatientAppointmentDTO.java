@@ -16,6 +16,6 @@ public class PatientAppointmentDTO {
     private String phone;
 
     private Integer insuranceId;
-
+  
     private Integer ssn;
 }
