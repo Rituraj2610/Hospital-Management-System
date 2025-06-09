@@ -73,5 +73,24 @@ public class PhysicianController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-    
+
+    // GET /physician/empid/{empid}
+    @GetMapping("/empid/{empid}")
+    public ResponseEntity<Response<PhysicianDto>> getPhysicianByEmpId(@PathVariable Integer empid) {
+        Physician physician = physicianRepository.findById(empid)
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found with Employee ID: " + empid));
+
+        PhysicianDto physicianDto = modelMapper.map(physician, PhysicianDto.class);
+
+        Response<PhysicianDto> response = Response.<PhysicianDto>builder()
+                .status(HttpStatus.FOUND.value())
+                .message("Physician fetched successfully")
+                .data(physicianDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.FOUND);
+    }
+
+
 }
