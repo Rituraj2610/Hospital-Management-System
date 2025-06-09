@@ -120,5 +120,18 @@ public class ProcedureControllerTest {
         assertEquals("Record Created Successfully", response.getBody());
         verify(procedureRepository, times(1)).save(any());
     }
+    @Test
+    void testUpdateProcedureCostFound() {
+        Procedure p = new Procedure(101, "X-Ray", 500.0);
+        when(procedureRepository.findById(101)).thenReturn(Optional.of(p));
+
+        Map<String, Double> body = new HashMap<>();
+        body.put("cost", 750.0);
+
+        ResponseEntity<?> response = procedureController.updateProcedureCost(101, body);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Procedure cost updated successfully.", response.getBody());
+    }
 
 }
