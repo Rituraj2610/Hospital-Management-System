@@ -314,9 +314,9 @@ public class AppointmentControllerTest {
                 .andExpect(result -> Assertions.assertEquals("No appointment found",
                         result.getResolvedException().getMessage()));
     }
-  
-  
-  
+
+
+
     // AMAN
     //get dates by patient id
     @Test
@@ -480,5 +480,5 @@ public class AppointmentControllerTest {
 
 
 }
-   
+
 }

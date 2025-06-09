@@ -1,20 +1,22 @@
 package com.capgemini.hospital_management_system.controller;
 
 
+import com.capgemini.hospital_management_system.dto.AffiliatedWithDto;
 import com.capgemini.hospital_management_system.dto.DepartmentDto;
 import com.capgemini.hospital_management_system.dto.PhysicianDepartmentDto;
 import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.AffiliatedWith;
+import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
 import com.capgemini.hospital_management_system.repository.AffiliatedWithRepository;
+import com.capgemini.hospital_management_system.repository.DepartmentRepository;
+import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +25,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/affiliated_with")
 public class AffiliatedWithController {
+
+    @Autowired
+    private PhysicianRepository physicianRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @Autowired
     private AffiliatedWithRepository affiliatedWithRepository;
@@ -92,5 +100,33 @@ public class AffiliatedWithController {
             return new ResponseEntity<>(response , HttpStatus.FOUND);
         }
 
-        
+
+    @PostMapping("/post")
+    public ResponseEntity<Response<String>> createAffiliated(@RequestBody AffiliatedWithDto affiliatedWithDto) {
+
+        Physician physician = physicianRepository.findById(affiliatedWithDto.getPhysicianId())
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found"));
+
+        Department department = departmentRepository.findById(affiliatedWithDto.getDepartmentId())
+                .orElseThrow(() -> new EntityNotFoundException("Department not found"));
+
+        AffiliatedWith affiliatedWith = new AffiliatedWith();
+
+        affiliatedWith.setPhysician(physician);
+        affiliatedWith.setDepartment(department);
+        affiliatedWith.setPrimaryAffiliation(affiliatedWithDto.getPrimaryAffiliation());
+
+        affiliatedWithRepository.save(affiliatedWith);
+
+        Response<String> response = Response.<String>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Affiliation created successfully")
+                .data("Affiliation between Physician and Department has been created.")
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+
 }
