@@ -24,7 +24,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -124,5 +126,30 @@ public class TrainedInController {
 	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", responseDto,LocalDateTime.now()));
 	}
 	
+    @GetMapping
+    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getCertifiedProcedures() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Set<Integer> seenProcedureCodes = new HashSet<>();
+
+        List<ProcedureTrainedInDTO> certifiedProcedures = trainedInRepository.findAll().stream()
+            .filter(trained -> trained.getCertificationExpires() != null &&
+                               trained.getCertificationExpires().isAfter(now) &&
+                               trained.getTreatment() != null)
+            .map(TrainedIn::getTreatment)
+            .filter(procedure -> seenProcedureCodes.add(procedure.getCode()))
+            .map(procedureTrainedInMapping::toDTO) 
+            .toList();
+
+        Response<List<ProcedureTrainedInDTO>> response = new Response<>(
+            200,
+            "Certified procedures fetched successfully",
+            certifiedProcedures,
+            now
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 
 }

@@ -1,5 +1,6 @@
 package com.capgemini.hospital_management_system.controller;
 
+import com.capgemini.hospital_management_system.dto.ProcedureTrainedInDTO;
 import com.capgemini.hospital_management_system.dto.TrainedInDTO;
 import com.capgemini.hospital_management_system.mapper.PhysicianTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.ProcedureTrainedInMapping;
@@ -20,10 +21,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -93,6 +96,40 @@ public class TrainedControllerTesting {
                 .andExpect(jsonPath("$.message").value("Record Created Successfully"))
                 .andExpect(jsonPath("$.data.physicianId").value(1))
                 .andExpect(jsonPath("$.data.procedureId").value(101));
+                
+    }
+    
+    @Test
+    public void testGetCertifiedProcedures_Success() throws Exception {
+        // Given
+        LocalDateTime now = LocalDateTime.now();
+        Procedure procedure = new Procedure();
+        procedure.setCode(1);
+        procedure.setName("X-Ray");
+
+        TrainedIn trainedIn = new TrainedIn();
+        trainedIn.setTreatment(procedure);
+        trainedIn.setCertificationExpires(now.plusDays(10));
+
+        ProcedureTrainedInDTO dto = new ProcedureTrainedInDTO();
+        dto.setCode(1);
+        dto.setName("X-Ray");
+
+        List<TrainedIn> trainedInList = List.of(trainedIn);
+        List<ProcedureTrainedInDTO> expectedDtoList = List.of(dto);
+
+        // Mocking repository and mapper
+        when(trainedInRepository.findAll()).thenReturn(trainedInList);
+        when(procedureTrainedInMapping.toDTO(procedure)).thenReturn(dto);
+
+        // When & Then
+        mockMvc.perform(get("/api/trained_in")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Certified procedures fetched successfully"))
+                .andExpect(jsonPath("$.data[0].code").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("X-Ray"));
                 
     }
 }
