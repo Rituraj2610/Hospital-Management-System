@@ -58,7 +58,38 @@ public class TrainedInController {
 	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", responseDto,LocalDateTime.now()));
 	}
 	
+	@GetMapping("/trained_in")
+	public ResponseEntity<Response<List<ProcedureDto>>> getCertifiedProcedures() {
+	    LocalDateTime now = LocalDateTime.now();
 
+	    Set<Integer> seenProcedureCodes = new HashSet<>();
+
+	    List<ProcedureDto> certifiedProcedures = trainedInRepository.findAll().stream()
+	        .filter(trained -> trained.getCertificationExpires() != null &&
+	                           trained.getCertificationExpires().isAfter(now) &&
+	                           trained.getTreatment() != null)
+	        .map(TrainedIn::getTreatment)
+	        .filter(procedure -> seenProcedureCodes.add(procedure.getCode())) 
+	        .map(ProcedureMapper::toDto)
+	        .toList();
+
+	    Response<List<ProcedureDto>> response = new Response<>(200, "Certified procedures fetched successfully", certifiedProcedures, now);
+	    return ResponseEntity.ok(response);
+	}
+
+	@GetMapping("/trained_in/treatment/{physicianId}")
+	public ResponseEntity<Response<List<ProcedureDto>>> getTreatmentsByPhysician(@PathVariable Integer physicianId) {
+	    LocalDateTime now = LocalDateTime.now();
+
+	    List<ProcedureDto> procedures = trainedInRepository.findByPhysician_EmployeeId(physicianId).stream()
+	        .map(TrainedIn::getTreatment)
+	        .filter(Objects::nonNull)
+	        .map(ProcedureMapper::toDto)
+	        .toList();
+
+	    Response<List<ProcedureDto>> response = new Response<>(200, "Procedures for physician " + physicianId + " fetched successfully", procedures, now);
+	    return ResponseEntity.ok(response);
+	}
 
 
 
