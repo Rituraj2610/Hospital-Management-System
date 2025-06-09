@@ -110,5 +110,28 @@ public class PhysicianController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    // PUT /update/position/{position}/{employeeId}
+    @PutMapping("/update/position/{position}/{employeeId}")
+    public ResponseEntity<Response<PhysicianDto>> updatePhysicianPosition(
+            @PathVariable String position,
+            @PathVariable Integer employeeId) {
+
+        Physician physician = physicianRepository.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found with Employee ID: " + employeeId));
+
+        physician.setPosition(position);
+        Physician updatedPhysician = physicianRepository.save(physician);
+
+        PhysicianDto physicianDto = modelMapper.map(updatedPhysician, PhysicianDto.class);
+
+        Response<PhysicianDto> response = Response.<PhysicianDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Physician position updated successfully")
+                .data(physicianDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 }
