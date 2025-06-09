@@ -322,7 +322,7 @@ public class AppointmentControllerTest {
     @DisplayName("Get appointment dates by patient ID")
     void getDatesByPatientId_ReturnsAppointmentDates() throws Exception {
         Appointment appointment = new Appointment(1, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2023-06-01T09:00"), LocalDateTime.parse("2023-06-01T09:30"), "room1", new HashSet<>());
-        Mockito.when(appointmentRepository.findByPatient_ssn(1)).thenReturn(List.of(appointment));
+        Mockito.when(appointmentRepository.findByPatient_Ssn(1)).thenReturn(List.of(appointment));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/date/1"))
                 .andExpect(status().isOk())
@@ -334,7 +334,7 @@ public class AppointmentControllerTest {
     @Test
     @DisplayName("Get appointment dates by patient ID - Not Found")
     void getDatesByPatientId_WhenNotFound_ThrowsException() throws Exception {
-        Mockito.when(appointmentRepository.findByPatient_ssn(1)).thenReturn(Collections.emptyList());
+        Mockito.when(appointmentRepository.findByPatient_Ssn(1)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/date/1"))
                 .andExpect(status().isNotFound())
@@ -476,6 +476,63 @@ public class AppointmentControllerTest {
                 .andExpect(result -> Assertions.assertEquals("No appointment found for patient id 100 and Nurse id 5", result.getResolvedException().getMessage()));
     }
 
+    @Test
+    @DisplayName("Get patients by nurse and date")
+    void getPatientsByNurseIdAndDate_ReturnsList() throws Exception {
+        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00:00");
+        List<Appointment> appointments = List.of(new Appointment());
+        List<PatientAppointmentDTO> dtos = List.of(new PatientAppointmentDTO());
+
+        Mockito.when(appointmentRepository.findByPrepNurse_employeeIdAndStart(1, date)).thenReturn(appointments);
+        Mockito.when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(dtos);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/patient/by-nurse-and-date")
+                        .param("nurseId", "1")
+                        .param("date", date.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("patient recived successfully"));
+    }
+
+    @Test
+    @DisplayName("Get room by patient and date")
+    void getRoomByPatientIdAndDate_ReturnsRoom() throws Exception {
+        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00:00");
+        Mockito.when(appointmentRepository.findByPatientIdAndStartDate(2, date)).thenReturn(Optional.of("room1"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/room/by-patient-and-date")
+                        .param("patientId", "2")
+                        .param("date", date.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").value("room1"));
+    }
+
+    @Test
+    @DisplayName("Get rooms by physician and date")
+    void getRoomsByPhysicianIdAndDate_ReturnsRooms() throws Exception {
+        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00:00");
+        Mockito.when(appointmentRepository.findByPhysicianIdAndStartDate(3, date)).thenReturn(List.of("room1", "room2"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/rooms/by-physician-and-date")
+                        .param("physicianId", "3")
+                        .param("date", date.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0]").value("room1"))
+                .andExpect(jsonPath("$.data[1]").value("room2"));
+    }
+
+    @Test
+    @DisplayName("Get rooms by nurse and date")
+    void getRoomsByNurseIdAndDate_ReturnsRooms() throws Exception {
+        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00:00");
+        Mockito.when(appointmentRepository.findByNurseIdAndStartDate(1, date)).thenReturn(List.of("roomA"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/rooms/by-nurse-and-date")
+                        .param("nurseId", "1")
+                        .param("date", date.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0]").value("roomA"));
+    }
 
 
 }
