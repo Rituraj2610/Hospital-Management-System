@@ -134,4 +134,27 @@ public class PhysicianController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // PUT /api/physician/update/name/{empid}?newName=XYZ
+    @PutMapping("/update/name/{empid}")
+    public ResponseEntity<Response<PhysicianDto>> updatePhysicianName(
+            @PathVariable Integer empid,
+            @RequestParam String newName) {
+
+        Physician physician = physicianRepository.findById(empid)
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found with Employee ID: " + empid));
+
+        physician.setName(newName);
+        Physician updatedPhysician = physicianRepository.save(physician);
+
+        PhysicianDto physicianDto = modelMapper.map(updatedPhysician, PhysicianDto.class);
+
+        Response<PhysicianDto> response = Response.<PhysicianDto>builder()
+                .status(HttpStatus.OK.value())
+                .message("Physician name updated successfully")
+                .data(physicianDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
