@@ -61,4 +61,27 @@ public class PhysicianControllerTest {
                 .andExpect(jsonPath("$.data.name").value("John Doe"));
     }
 
+    @Test
+    void testGetPhysiciansByPosition() throws Exception {
+        Physician physician = new Physician();
+        physician.setEmployeeId(2);
+        physician.setName("Jane Smith");
+        physician.setPosition("Neurologist");
+        physician.setSsn(54321);
+
+        PhysicianDto physicianDto = new PhysicianDto(2, "Jane Smith", "Neurologist", 54321);
+
+        List<Physician> physicianList = List.of(physician);
+        List<PhysicianDto> physicianDtoList = List.of(physicianDto);
+
+        when(physicianRepository.findAllByPosition("Neurologist")).thenReturn(physicianList);
+        when(modelMapper.map(physician, PhysicianDto.class)).thenReturn(physicianDto);
+
+        mockMvc.perform(get("/api/physician/position/Neurologist"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Physicians fetched successfully"))
+                .andExpect(jsonPath("$.data[0].name").value("Jane Smith"));
+    }
+
 }
