@@ -54,6 +54,22 @@ public class ProcedureController {
 
         return new ResponseEntity<>(response, dtos.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
+    // Search procedures by name
+    @GetMapping("/search")
+    public ResponseEntity<Response<List<ProcedureDTO>>> searchProceduresByName(@RequestParam String name) {
+        List<ProcedureDTO> filtered = procedureRepository.findAll().stream()
+                .filter(p -> p.getName().toLowerCase().contains(name.toLowerCase()))
+                .map(p -> new ProcedureDTO(p.getCode(), p.getName(), p.getCost()))
+                .collect(Collectors.toList());
+
+        Response<List<ProcedureDTO>> response = Response.<List<ProcedureDTO>>builder()
+                .status(filtered.isEmpty() ? 404 : 200)
+                .message(filtered.isEmpty() ? "No procedures found matching: " + name : "Success")
+                .data(filtered)
+                .build();
+
+        return new ResponseEntity<>(response, filtered.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    }
 
 
 
