@@ -4,15 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class PhysicianAppointmentDTO {
-    private Integer employeeId;
-
-    private String name;
-
-    private String position;
-
-    private Integer ssn;
+public class NurseDto {
+	 private Integer employeeId;
+	 private String name;
+	 private String position;
+	 private Boolean registered;
+	 private Integer ssn;
 }

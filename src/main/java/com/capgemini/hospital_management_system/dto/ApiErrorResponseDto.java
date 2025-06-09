@@ -1,11 +1,13 @@
 package com.capgemini.hospital_management_system.dto;
 
-import lombok.Builder;
-import lombok.Getter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Builder
 public class ApiErrorResponseDto {
 

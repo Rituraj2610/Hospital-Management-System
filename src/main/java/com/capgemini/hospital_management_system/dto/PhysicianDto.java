@@ -7,15 +7,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class PatientAppointmentDTO {
+public class PhysicianDto {
 
+    private Integer employeeId;
     private String name;
-
-    private String address;
-
-    private String phone;
-
-    private Integer insuranceId;
-  
+    private String position;
     private Integer ssn;
+
+    // No Set<Department>, Set<Patient>, etc. — clean DTO!
 }
