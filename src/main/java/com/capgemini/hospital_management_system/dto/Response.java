@@ -20,3 +20,6 @@ public class Response<T> {
     private LocalDateTime time = LocalDateTime.now();
 }
 
+    @Builder.Default
+    private LocalDateTime time = LocalDateTime.now();
+}
