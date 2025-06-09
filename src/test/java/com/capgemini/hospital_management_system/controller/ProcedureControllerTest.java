@@ -157,5 +157,16 @@ public class ProcedureControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Procedure name updated successfully.", response.getBody());
     }
+    @Test
+    void testUpdateProcedureNameNotFound() {
+        when(procedureRepository.findById(999)).thenReturn(Optional.empty());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("name", "DoesNotExist");
+
+        ResponseEntity<?> response = procedureController.updateProcedureName(999, body);
+
+        assertEquals(404, response.getStatusCodeValue());
+    }
 
 }
