@@ -1,12 +1,16 @@
 package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.PhysicianTrainedInDTO;
+import com.capgemini.hospital_management_system.dto.ProcedureTrainedInDTO;
 import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.dto.TrainedInDTO;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.PhysicianTrainedInMapping;
+import com.capgemini.hospital_management_system.mapper.ProcedureTrainedInMapping;
 import com.capgemini.hospital_management_system.model.Physician;
 import com.capgemini.hospital_management_system.model.Procedure;
 import com.capgemini.hospital_management_system.model.TrainedIn;
+import com.capgemini.hospital_management_system.model.TrainedInId;
 import com.capgemini.hospital_management_system.repository.TrainedInRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +40,9 @@ class TrainedInControllerTest {
     @Mock
     private PhysicianTrainedInMapping physicianTrainedInMapping;
 
+    @Mock
+    private ProcedureTrainedInMapping procedureTrainedInMapping;
+
     @InjectMocks
     private TrainedInController trainedInController;
 
@@ -42,6 +50,10 @@ class TrainedInControllerTest {
     private Physician physician;
     private Procedure procedure;
     private PhysicianTrainedInDTO physicianDTO;
+    private ProcedureTrainedInDTO procedureDTO;
+    private TrainedInDTO trainedInDTO;
+
+
 
     @BeforeEach
     void setUp() {
@@ -84,4 +96,33 @@ class TrainedInControllerTest {
         verify(trainedInRepository).findByTreatmentCode(procedureId);
         verify(physicianTrainedInMapping).toDTO(physician);
     }
+
+    @Test
+    void getExpiringCertifications_Success() {
+        // Arrange
+        int physicianId = 4;
+        List<TrainedIn> trainedIns = Arrays.asList(trainedIn);
+        when(trainedInRepository.findByPhysicianEmployeeIdAndCertificationExpiresBetween(
+                eq(physicianId), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(trainedIns);
+        when(procedureTrainedInMapping.toDTO(any(Procedure.class))).thenReturn(procedureDTO);
+
+        // Act
+        ResponseEntity<Response<List<ProcedureTrainedInDTO>>> responseEntity =
+                trainedInController.getExpiringCertifications(physicianId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Response<List<ProcedureTrainedInDTO>> response = responseEntity.getBody();
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        assertEquals("Expiring certifications retrieved successfully", response.getMessage());
+        assertEquals(1, response.getData().size());
+        assertEquals(procedureDTO, response.getData().get(0));
+        verify(trainedInRepository).findByPhysicianEmployeeIdAndCertificationExpiresBetween(
+                eq(physicianId), any(LocalDateTime.class), any(LocalDateTime.class));
+        verify(procedureTrainedInMapping).toDTO(procedure);
+    }
+
+
 }

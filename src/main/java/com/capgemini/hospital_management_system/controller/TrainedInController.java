@@ -61,5 +61,48 @@ public class TrainedInController {
                 LocalDateTime.now()
         ));
     }
+    @GetMapping("/expiredsooncerti/{physicianId}")
+    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getExpiringCertifications(@PathVariable int physicianId) {
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusMonths(1);
+        List<TrainedIn> trainedIns = trainedInRepository.findByPhysicianEmployeeIdAndCertificationExpiresBetween(
+                physicianId, start, end);
+        if (trainedIns.isEmpty()) {
+            throw new EntityNotFoundException("No certifications expiring within a month for physician ID " + physicianId);
+        }
+        List<ProcedureTrainedInDTO> procedureDTOs = trainedIns.stream()
+                .map(trainedIn -> procedureTrainedInMapping.toDTO(trainedIn.getTreatment()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(new Response<>(
+                HttpStatus.OK.value(),
+                "Expiring certifications retrieved successfully",
+                procedureDTOs,
+                LocalDateTime.now()
+        ));
+    }
+
+
+    @PutMapping("/certificationexpiry/{physicianId}&{procedureId}")
+    public ResponseEntity<Response<Boolean>> updateCertificationExpiry(
+            @PathVariable int physicianId,
+            @PathVariable int procedureId,
+            @RequestBody TrainedInDTO trainedInDTO) {
+        TrainedInId id = new TrainedInId(physicianId, procedureId);
+        TrainedIn trainedIn = trainedInRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Certification not found for physician ID " + physicianId + " and procedure ID " + procedureId));
+        if (trainedInDTO.getCertificationExpires() != null) {
+            trainedIn.setCertificationExpires(trainedInDTO.getCertificationExpires());
+            trainedInRepository.save(trainedIn);
+            return ResponseEntity.ok(new Response<>(
+                    HttpStatus.OK.value(),
+                    "Certification expiry updated successfully",
+                    true,
+                    LocalDateTime.now()
+            ));
+        } else {
+            throw new EntityNotFoundException("Certification expiry date is required");
+        }
+    }
 
 }
