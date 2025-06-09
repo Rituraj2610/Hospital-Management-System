@@ -92,5 +92,23 @@ public class PhysicianController {
         return new ResponseEntity<>(response, HttpStatus.FOUND);
     }
 
+    // POST /api/physician/post
+    @PostMapping("/post")
+    public ResponseEntity<Response<PhysicianDto>> addPhysician(@RequestBody PhysicianDto physicianDto) {
+        Physician physician = modelMapper.map(physicianDto, Physician.class);
+        Physician savedPhysician = physicianRepository.save(physician);
+
+        PhysicianDto responseDto = modelMapper.map(savedPhysician, PhysicianDto.class);
+
+        Response<PhysicianDto> response = Response.<PhysicianDto>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Physician created successfully")
+                .data(responseDto)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
 
 }
