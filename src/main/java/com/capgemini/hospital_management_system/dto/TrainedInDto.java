@@ -6,12 +6,13 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class TrainedInDto {
-    private Long physicianId;
-    private Long treatmentId;
+    private Integer physicianId;
+    private Integer treatmentId;
     private LocalDateTime certificationDate;
     private LocalDateTime certificationExpires;
 }

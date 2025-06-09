@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,4 +13,6 @@ import java.io.Serializable;
 public class TrainedInId implements Serializable {
     private Integer physician; // Matches Physician.employeeId
     private Integer treatment; // Matches Procedure.code
+    
+    
 }
