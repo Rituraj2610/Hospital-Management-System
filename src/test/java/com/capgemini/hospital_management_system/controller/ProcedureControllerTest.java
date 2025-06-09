@@ -84,4 +84,28 @@ public class ProcedureControllerTest {
         verify(procedureRepository, times(1)).findAll();
     }
 
+    @Test
+    void testSearchProceduresByName_notFound() {
+        // Arrange
+        Procedure p = new Procedure();
+        p.setCode(1);
+        p.setName("Ultrasound");
+        p.setCost(150.0);
+
+        when(procedureRepository.findAll()).thenReturn(List.of(p));
+
+        // Act
+        ResponseEntity<Response<List<ProcedureDTO>>> responseEntity = procedureController.searchProceduresByName("X-Ray");
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        Response<List<ProcedureDTO>> response = responseEntity.getBody();
+        assertNotNull(response);
+        assertEquals(404, response.getStatus());
+        assertEquals("No procedures found matching: X-Ray", response.getMessage());
+        assertTrue(response.getData().isEmpty());
+
+        verify(procedureRepository, times(1)).findAll();
+    }
+
 }
