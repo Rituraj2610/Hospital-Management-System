@@ -107,5 +107,18 @@ public class ProcedureControllerTest {
 
         verify(procedureRepository, times(1)).findAll();
     }
+    @Test
+    void testCreateProcedure() {
+        ProcedureDTO dto = new ProcedureDTO(103, "CT Scan", 2000.0);
+        Procedure entity = new Procedure(103, "CT Scan", 2000.0);
+
+        when(procedureRepository.save(any())).thenReturn(entity);
+
+        ResponseEntity<String> response = procedureController.createProcedure(dto);
+
+        assertEquals(201, response.getStatusCodeValue());
+        assertEquals("Record Created Successfully", response.getBody());
+        verify(procedureRepository, times(1)).save(any());
+    }
 
 }
