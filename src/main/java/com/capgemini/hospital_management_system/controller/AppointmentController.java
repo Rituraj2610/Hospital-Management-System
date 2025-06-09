@@ -2,10 +2,7 @@ package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
-import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
-import com.capgemini.hospital_management_system.mapper.NurseMapper;
-import com.capgemini.hospital_management_system.mapper.PatientMapper;
-import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
+import com.capgemini.hospital_management_system.mapper.*;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.model.Patient;
