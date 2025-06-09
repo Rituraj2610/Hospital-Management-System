@@ -78,5 +78,19 @@ public class AffiliatedWithController {
     }
 
 
-    
+    @GetMapping("/count-physicians/{deptId}")
+        public ResponseEntity<Response<Integer>> countPhysiciansByDepartment(@PathVariable Integer deptId) {
+            int count = affiliatedWithRepository.findByDepartment_DepartmentId(deptId).size();
+
+            Response<Integer> response = Response.<Integer>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("Physician count for department ID: " + deptId)
+                    .data(count)
+                    .time(LocalDateTime.now())
+                    .build();
+
+            return new ResponseEntity<>(response , HttpStatus.FOUND);
+        }
+
+        
 }
