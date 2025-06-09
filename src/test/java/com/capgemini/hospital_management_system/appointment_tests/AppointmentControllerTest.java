@@ -323,7 +323,7 @@ public class AppointmentControllerTest {
     @DisplayName("Get appointment dates by patient ID")
     void getDatesByPatientId_ReturnsAppointmentDates() throws Exception {
         Appointment appointment = new Appointment(1, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2023-06-01T09:00"), LocalDateTime.parse("2023-06-01T09:30"), "room1", new HashSet<>());
-        Mockito.when(appointmentRepository.findByPatient_ssn(1)).thenReturn(List.of(appointment));
+        Mockito.when(appointmentRepository.findByPatient_Ssn(1)).thenReturn(List.of(appointment));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/date/1"))
                 .andExpect(status().isOk())
@@ -335,7 +335,7 @@ public class AppointmentControllerTest {
     @Test
     @DisplayName("Get appointment dates by patient ID - Not Found")
     void getDatesByPatientId_WhenNotFound_ThrowsException() throws Exception {
-        Mockito.when(appointmentRepository.findByPatient_ssn(1)).thenReturn(Collections.emptyList());
+        Mockito.when(appointmentRepository.findByPatient_Ssn(1)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/date/1"))
                 .andExpect(status().isNotFound())
@@ -479,6 +479,4 @@ public class AppointmentControllerTest {
 
 
 
-}
-   
 }
