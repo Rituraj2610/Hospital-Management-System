@@ -9,14 +9,16 @@ spring:
 #    password: root
 
     #REMOTE DB
-    url: jdbc:mysql://<ip>:3306/hospital_management_server
+    url: jdbc:mysql://192.168.56.74:3306/hospital_management_server
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: aman
     password: pass@123
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
     properties:
       hibernate:

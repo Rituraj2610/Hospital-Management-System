@@ -1,26 +1,29 @@
 package com.capgemini.hospital_management_system.model;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "On_Call")
-@IdClass(OnCallId.class)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class OnCall {
-    @Id
+
+    @EmbeddedId
+    private OnCallId id;
+
+    @MapsId("nurseId")
     @ManyToOne
     @JoinColumn(name = "Nurse")
     @JsonBackReference
     private Nurse nurse;
 
-    @Id
+    @MapsId("blockId")
     @ManyToOne
     @JoinColumns({
             @JoinColumn(name = "BlockFloor", referencedColumnName = "BlockFloor"),
@@ -28,13 +31,5 @@ public class OnCall {
     })
     @JsonBackReference
     private Block block;
-
-    @Id
-    @Column(name = "OnCallStart")
-    private LocalDateTime onCallStart;
-
-    @Id
-    @Column(name = "OnCallEnd")
-    private LocalDateTime onCallEnd;
 
 }
