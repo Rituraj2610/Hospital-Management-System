@@ -125,4 +125,26 @@ public class PhysicianControllerTest {
                 .andExpect(jsonPath("$.message").value("Physician created successfully"))
                 .andExpect(jsonPath("$.data.name").value("Bob Martin"));
     }
+
+    @Test
+    void testUpdatePhysicianPosition() throws Exception {
+        Physician physician = new Physician();
+        physician.setEmployeeId(5);
+        physician.setName("David Lee");
+        physician.setPosition("General");
+        physician.setSsn(66666);
+
+        PhysicianDto physicianDto = new PhysicianDto(5, "David Lee", "Orthopedic", 66666);
+
+        when(physicianRepository.findById(5)).thenReturn(Optional.of(physician));
+        physician.setPosition("Orthopedic");
+        when(physicianRepository.save(any(Physician.class))).thenReturn(physician);
+        when(modelMapper.map(physician, PhysicianDto.class)).thenReturn(physicianDto);
+
+        mockMvc.perform(put("/api/physician/update/position/Orthopedic/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Physician position updated successfully"))
+                .andExpect(jsonPath("$.data.position").value("Orthopedic"));
+    }
 }
