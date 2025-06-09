@@ -37,6 +37,24 @@ public class ProcedureController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    // Get procedure by ID (code)
+    @GetMapping("/{code}")
+    public ResponseEntity<Response<List<ProcedureDTO>>> getProcedureById(@PathVariable Integer code) {
+        Optional<Procedure> optionalProcedure = procedureRepository.findById(code);
+
+        List<ProcedureDTO> dtos = optionalProcedure
+                .map(p -> List.of(new ProcedureDTO(p.getCode(), p.getName(), p.getCost())))
+                .orElse(Collections.emptyList());
+
+        Response<List<ProcedureDTO>> response = Response.<List<ProcedureDTO>>builder()
+                .status(dtos.isEmpty() ? 404 : 200)
+                .message(dtos.isEmpty() ? "Procedure not found with code: " + code : "Success")
+                .data(dtos)
+                .build();
+
+        return new ResponseEntity<>(response, dtos.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.OK);
+    }
+
 
 
 
