@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class TrainedInDTO {
     private Integer physicianId;
-    private Integer treatmentId;
+   // private Integer treatmentId;
     private Integer procedureId;
     private LocalDateTime certificationDate;
     private LocalDateTime certificationExpires;

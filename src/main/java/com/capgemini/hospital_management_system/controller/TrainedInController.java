@@ -9,11 +9,15 @@ import com.capgemini.hospital_management_system.exception.EntityNotFoundExceptio
 import com.capgemini.hospital_management_system.mapper.PhysicianTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.ProcedureTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.TrainedInMapping;
+import com.capgemini.hospital_management_system.model.Physician;
+import com.capgemini.hospital_management_system.model.Procedure;
 import com.capgemini.hospital_management_system.model.TrainedIn;
 import com.capgemini.hospital_management_system.model.TrainedInId;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import com.capgemini.hospital_management_system.repository.ProceduresRepository;
 import com.capgemini.hospital_management_system.repository.TrainedInRepository;
+
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +26,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/trained_in")
 @Slf4j
+@AllArgsConstructor
 public class TrainedInController {
 
     @Autowired
@@ -42,6 +51,7 @@ public class TrainedInController {
     private ProcedureTrainedInMapping procedureTrainedInMapping;
     @Autowired
     private PhysicianTrainedInMapping physicianTrainedInMapping;
+    
 
 
 
@@ -104,5 +114,78 @@ public class TrainedInController {
             throw new EntityNotFoundException("Certification expiry date is required");
         }
     }
+    
+    @PostMapping
+	public ResponseEntity<Response<TrainedInDTO>> addCertificate(@RequestBody TrainedInDTO req) {
+	    Physician physician = physicianRepository.findById(req.getPhysicianId())
+	            .orElseThrow(() -> new RuntimeException("Physician not found"));
+
+	    Procedure procedure = procedureRepository.findById(req.getProcedureId())
+	            .orElseThrow(() -> new RuntimeException("Procedure not found"));
+
+	    TrainedIn trainedIn = trainedInMapping.toEntity(req);
+	    trainedIn.setPhysician(physician);
+	    trainedIn.setTreatment(procedure);
+
+	    TrainedIn saved = trainedInRepository.save(trainedIn);
+	    TrainedInDTO responseDto = trainedInMapping.toDTO(saved);
+	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", responseDto,LocalDateTime.now()));
+	}
+	
+    @GetMapping
+    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getCertifiedProcedures() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Set<Integer> seenProcedureCodes = new HashSet<>();
+
+        List<ProcedureTrainedInDTO> certifiedProcedures = trainedInRepository.findAll().stream()
+            .filter(trained -> trained.getCertificationExpires() != null &&
+                               trained.getCertificationExpires().isAfter(now) &&
+                               trained.getTreatment() != null)
+            .map(TrainedIn::getTreatment)
+            .filter(procedure -> seenProcedureCodes.add(procedure.getCode()))
+            .map(procedureTrainedInMapping::toDTO) 
+            .toList();
+
+        Response<List<ProcedureTrainedInDTO>> response = new Response<>(
+            200,
+            "Certified procedures fetched successfully",
+            certifiedProcedures,
+            now
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    
+    @GetMapping("/treatment/{physicianId}")
+    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getTreatmentsByPhysician(@PathVariable Integer physicianId) {
+        LocalDateTime now = LocalDateTime.now();
+
+        List<TrainedIn> trainedInList = trainedInRepository.findByPhysicianEmployeeId(physicianId);
+        List<ProcedureTrainedInDTO> procedures = new ArrayList<>();
+
+        for (TrainedIn trainedIn : trainedInList) {
+            if (trainedIn != null && trainedIn.getTreatment() != null) {
+                ProcedureTrainedInDTO dto = procedureTrainedInMapping.toDTO(trainedIn.getTreatment());
+                if (dto != null) {
+                    procedures.add(dto);
+                }
+            }
+        }
+
+        Response<List<ProcedureTrainedInDTO>> response = new Response<>(
+            200,
+            "Procedures for physician " + physicianId + " fetched successfully",
+            procedures,
+            now
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
 
 }
