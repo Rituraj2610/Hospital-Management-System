@@ -44,5 +44,15 @@ public class ProcedureControllerTest {
         assertEquals(2, response.getBody().getData().size());
         verify(procedureRepository, times(1)).findAll();
     }
+    @Test
+    void testGetProcedureByIdNotFound() {
+        when(procedureRepository.findById(999)).thenReturn(Optional.empty());
+
+        ResponseEntity<Response<List<ProcedureDTO>>> response = procedureController.getProcedureById(999);
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals("Procedure not found with code: 999", response.getBody().getMessage());
+        assertTrue(response.getBody().getData().isEmpty());
+    }
 
 }
