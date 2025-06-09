@@ -6,10 +6,7 @@ import com.capgemini.hospital_management_system.dto.NurseAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.PhysicianAppointmentDTO;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
-import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
-import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
-import com.capgemini.hospital_management_system.mapper.PatientMapper;
-import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
+import com.capgemini.hospital_management_system.mapper.*;
 import com.capgemini.hospital_management_system.model.*;
 import com.capgemini.hospital_management_system.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +50,7 @@ public class AppointmentControllerTest {
     private PhysicianMapper physicianMapper;
 
     @MockitoBean
-    private NurseCustomMapper nurseCustomMapper;
+    private NurseMapper nurseCustomMapper;
 
     @Test
     @DisplayName("Get all appointments")
@@ -142,7 +139,7 @@ public class AppointmentControllerTest {
         Patient patient = new Patient(123, "John", "abc", "1234556", 12345, new Physician(),
                 new HashSet<>(), new HashSet<>(),new HashSet<>(),new HashSet<>());
 
-        PatientAppointmentDTO patientDTO = new PatientAppointmentDTO("John", "abc", "1234556", 12345);
+        PatientAppointmentDTO patientDTO = new PatientAppointmentDTO("John", "abc", "1234556", 12345, 111);
 
         Mockito.when(appointmentRepository.findPatientByAppointmentId(111)).thenReturn(Optional.of(patient));
         Mockito.when(patientMapper.toDto(patient)).thenReturn(patientDTO);
@@ -186,7 +183,7 @@ public class AppointmentControllerTest {
         Nurse nurse = new Nurse(111, "n1", "head", true, 1111,
                 new HashSet<>(), new HashSet<>(), new HashSet<>());
 
-        NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO("n1", "head", true, 1111);
+        NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO(111, "n1", "head", true, 1111);
 
         Mockito.when(appointmentRepository.fetchNurseByAppointmentId(111)).thenReturn(Optional.of(nurse));
         Mockito.when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
@@ -277,7 +274,7 @@ public class AppointmentControllerTest {
         List<Appointment> appointments = List.of(appointment1);
 
 
-        NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO("n1", "head", true, 1111);
+        NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO(111, "n1", "head", true, 1111);
 
         Mockito.when(appointmentRepository.findByPatient_Ssn(222)).thenReturn(appointments);
         Mockito.when(nurseCustomMapper.toDto(Mockito.any(Nurse.class))).thenReturn(nurseAppointmentDTO);
