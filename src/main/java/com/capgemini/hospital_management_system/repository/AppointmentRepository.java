@@ -45,8 +45,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
     List<Appointment> findByPrepNurse_employeeIdAndStart(Integer prepNurseEmployeeId, LocalDateTime start);
     List<Appointment> findByPrepNurse_employeeId(Integer employeeId);
 
+    @Query("SELECT a.examinationRoom FROM Appointment a WHERE a.patient.ssn = :patientId AND a.start = :date")
+    Optional<String> findByPatientIdAndStartDate(@Param("patientId") Integer patientId, @Param("date") LocalDateTime date);
+
+    @Query("SELECT a.examinationRoom FROM Appointment a WHERE a.physician.employeeId = :physicianId AND a.start = :date")
+    List<String> findByPhysicianIdAndStartDate(@Param("physicianId") Integer physicianId, @Param("date") LocalDateTime date);
+
+    @Query("SELECT a.examinationRoom FROM Appointment a WHERE a.prepNurse.employeeId = :nurseId AND a.start = :date")
+    List<String> findByNurseIdAndStartDate(@Param("nurseId") Integer nurseId, @Param("date") LocalDateTime date);
+
     @Query("SELECT a.patient FROM Appointment a WHERE a.physician.employeeId = :employeeId AND a.patient.ssn = :patientId")
     Optional<Patient> findByPhysicianIdAndPatientId(@Param("employeeId") Integer employeeId, @Param("patientId") Integer patientId);
+
     @Query("SELECT a.patient FROM Appointment a WHERE a.prepNurse.employeeId = :employeeId AND a.patient.ssn = :patientId")
     Optional<Patient> findByNurseIdAndPatientId(@Param("nurseId") Integer nurseId, @Param("patientId") Integer patientId);
 }

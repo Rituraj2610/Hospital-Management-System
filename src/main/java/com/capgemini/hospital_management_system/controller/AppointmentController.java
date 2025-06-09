@@ -3,11 +3,14 @@ package com.capgemini.hospital_management_system.controller;
 import com.capgemini.hospital_management_system.dto.AppointmentDatesDTO;
 import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.dto.RoomAppointmentDto;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.PatientListMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
+import com.capgemini.hospital_management_system.mapper.RoomMapper;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Patient;
+import com.capgemini.hospital_management_system.model.Room;
 import com.capgemini.hospital_management_system.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -346,6 +349,76 @@ public class AppointmentController {
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
 
+    }
+
+    @GetMapping("/room/by-patient-and-date")
+    public ResponseEntity<Response<String>> getRoomByPatientIdAndDate
+            (@RequestParam Integer patientId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime date) {
+        Optional<String> room = appointmentRepository.findByPatientIdAndStartDate(patientId, date);
+        if (room.isEmpty()) {
+            throw new EntityNotFoundException("No room found with patientId" + patientId + " and appointment date " + date);
+        }
+        Response<String> response = new Response<>(
+                HttpStatus.OK.value(),
+                "room recived successfully",
+                 room.get(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @GetMapping("/rooms/by-physician-and-date")
+    public ResponseEntity<Response<List<String>>> geRoomByPhysicianIdAndDate
+            (@RequestParam Integer physicianId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime date) {
+        List<String> room = appointmentRepository.findByPhysicianIdAndStartDate(physicianId, date);
+        if (room.isEmpty()) {
+            throw new EntityNotFoundException("No room found with physicianId" + physicianId + " and appointment date " + date);
+        }
+        Response<List<String>> response = new Response<>(
+                HttpStatus.OK.value(),
+                "room recived successfully",
+                room,
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @GetMapping("/rooms/by-nurse-and-date")
+    public ResponseEntity<Response<List<String>>> getRoomByNurseIdAndDate
+            (@RequestParam Integer nurseId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime date) {
+        List<String> room = appointmentRepository.findByNurseIdAndStartDate(nurseId, date);
+        if (room.isEmpty()) {
+            throw new EntityNotFoundException("No room found with nurseId" + nurseId + " and appointment date " + date);
+        }
+        Response<List<String>> response = new Response<>(
+                HttpStatus.OK.value(),
+                "room recived successfully",
+                room,
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @PutMapping("/room/{appointmentId}")
+    public ResponseEntity<Response<String>> updateRoomByAppointmentId(@PathVariable Integer appointmentId, @RequestBody String examinationRoom){
+      Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow(
+              () -> new EntityNotFoundException("No appointment found with appointmentId " + appointmentId)
+      );
+      appointment.setExaminationRoom(examinationRoom);
+      appointmentRepository.save(appointment);
+      Response<String> response = new Response<>(
+              HttpStatus.OK.value(),
+              "room updated successfully",
+              examinationRoom,
+              LocalDateTime.now()
+      );
+      return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
