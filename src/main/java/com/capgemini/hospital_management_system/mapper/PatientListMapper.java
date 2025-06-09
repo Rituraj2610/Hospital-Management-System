@@ -11,7 +11,7 @@ public class PatientListMapper {
     public List<PatientAppointmentDTO> appointmentToPatientList(List<Appointment> appointments){
         List<PatientAppointmentDTO> patients = appointments.stream()
                 .map(appointment -> new PatientAppointmentDTO(appointment.getPatient().getName(), appointment.getPatient().getAddress(),
-                        appointment.getPatient().getPhone(), appointment.getPatient().getInsuranceId()))
+                        appointment.getPatient().getPhone(), appointment.getPatient().getInsuranceId(), appointment.getPatient().getSsn()))
                 .toList();
 
         return patients;

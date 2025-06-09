@@ -7,7 +7,6 @@ import com.capgemini.hospital_management_system.dto.RoomAppointmentDto;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.PatientListMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
-import com.capgemini.hospital_management_system.mapper.RoomMapper;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Patient;
 import com.capgemini.hospital_management_system.model.Room;
@@ -244,7 +243,7 @@ public class AppointmentController {
   // AMAN
   @GetMapping("/date/{patientId}")
   public ResponseEntity<Response<List<AppointmentDatesDTO>>> getDatesByPatientId(@PathVariable("patientId") Integer patientId) {
-       List<Appointment> appointments = appointmentRepository.findByPatient_ssn(patientId);
+       List<Appointment> appointments = appointmentRepository.findByPatient_Ssn(patientId);
        if(appointments.isEmpty()) {
            throw new EntityNotFoundException("No appointment found for patient id " + patientId);
        }
