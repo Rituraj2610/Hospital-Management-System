@@ -1,8 +1,6 @@
 package com.capgemini.hospital_management_system.controller;
 
-import com.capgemini.hospital_management_system.dto.AffiliatedWithDto;
-import com.capgemini.hospital_management_system.dto.Response;
-import com.capgemini.hospital_management_system.dto.UpdatePrimaryAffiliationDto;
+import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.model.AffiliatedWith;
 import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
@@ -15,10 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,13 +31,16 @@ public class AffiliatedWithControllerTest {
     private AffiliatedWithRepository affiliatedWithRepository;
 
     @Mock
+    private ModelMapper modelMapper;
+
+    @Mock
     private PhysicianRepository physicianRepository;
 
     @Mock
     private DepartmentRepository departmentRepository;
 
     @InjectMocks
-    private AffiliatedWithController affiliatedWithController;
+    private AffiliatedWithController affiliatedWithController; // Use consistent name
 
     private AffiliatedWithDto affiliatedWithDto;
     private Physician physician;
@@ -61,14 +64,11 @@ public class AffiliatedWithControllerTest {
 
     @Test
     void testCreateAffiliated() {
-        // Arrange
         when(physicianRepository.findById(101)).thenReturn(Optional.of(physician));
         when(departmentRepository.findById(1)).thenReturn(Optional.of(department));
 
-        // Act
         ResponseEntity<Response<String>> responseEntity = affiliatedWithController.createAffiliated(affiliatedWithDto);
 
-        // Assert
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
         assertEquals("Affiliation created successfully", responseEntity.getBody().getMessage());
@@ -79,20 +79,16 @@ public class AffiliatedWithControllerTest {
     void testHasPrimaryAffiliation() {
         Integer physicianId = 1;
 
-        // Mock the repository method
         when(affiliatedWithRepository.existsByPhysicianEmployeeIdAndPrimaryAffiliationTrue(physicianId))
                 .thenReturn(true);
 
-        // Call the controller method
         ResponseEntity<Response<Boolean>> responseEntity = affiliatedWithController.hasPrimaryAffiliation(physicianId);
 
-        // Assert response status and body
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
         assertTrue(responseEntity.getBody().getData());
         assertEquals("Primary affiliation status retrieved", responseEntity.getBody().getMessage());
     }
-
 
     @Test
     void testUpdatePrimaryAffiliation() {
@@ -123,7 +119,68 @@ public class AffiliatedWithControllerTest {
         assertTrue(response.getBody().getData());
     }
 
+    @Test
+    void testGetPhysiciansByDepartment() {
+        Integer deptId = 1;
+        Physician physician = new Physician();
+        physician.setEmployeeId(100);
+        List<AffiliatedWith> affiliations = List.of(new AffiliatedWith());
+        affiliations.get(0).setPhysician(physician);
 
+        PhysicianDepartmentDto physicianDto = new PhysicianDepartmentDto();
+        physicianDto.setEmployeeId(100);
 
+        when(affiliatedWithRepository.findByDepartment_DepartmentId(deptId)).thenReturn(affiliations);
+        when(modelMapper.map(physician, PhysicianDepartmentDto.class)).thenReturn(physicianDto);
 
+        ResponseEntity<Response<List<PhysicianDepartmentDto>>> response = affiliatedWithController.getPhysiciansByDepartment(deptId);
+
+        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertFalse(response.getBody().getData().isEmpty());
+        assertEquals(100, response.getBody().getData().get(0).getEmployeeId());
+    }
+
+    @Test
+    void testGetDepartmentsByPhysician() {
+        Long physicianId = 10L;
+        Department department = new Department();
+        department.setDepartmentId(2);
+        Physician physician = new Physician();
+        physician.setEmployeeId(10);
+
+        AffiliatedWith aff = new AffiliatedWith();
+        aff.setDepartment(department);
+        aff.setPhysician(physician);
+
+        List<AffiliatedWith> affiliations = List.of(aff);
+
+        DepartmentDto departmentDto = new DepartmentDto();
+        departmentDto.setDepartmentId(2);
+        PhysicianDepartmentDto physicianDto = new PhysicianDepartmentDto();
+        physicianDto.setEmployeeId(10);
+        departmentDto.setPhysicianDetail(physicianDto);
+
+        when(affiliatedWithRepository.findByPhysician_EmployeeId(physicianId)).thenReturn(affiliations);
+        when(modelMapper.map(department, DepartmentDto.class)).thenReturn(departmentDto);
+        when(modelMapper.map(physician, PhysicianDepartmentDto.class)).thenReturn(physicianDto);
+
+        ResponseEntity<Response<List<DepartmentDto>>> response = affiliatedWithController.getDepartmentsByPhysician(physicianId);
+
+        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertFalse(response.getBody().getData().isEmpty());
+        assertEquals(2, response.getBody().getData().get(0).getDepartmentId());
+    }
+
+    @Test
+    void testCountPhysiciansByDepartment() {
+        Integer deptId = 1;
+        List<AffiliatedWith> affiliations = List.of(new AffiliatedWith(), new AffiliatedWith());
+
+        when(affiliatedWithRepository.findByDepartment_DepartmentId(deptId)).thenReturn(affiliations);
+
+        ResponseEntity<Response<Integer>> response = affiliatedWithController.countPhysiciansByDepartment(deptId);
+
+        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(2, response.getBody().getData());
+    }
 }
