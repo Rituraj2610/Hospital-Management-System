@@ -15,6 +15,8 @@ public interface AffiliatedWithRepository extends JpaRepository<AffiliatedWith, 
 
         List<AffiliatedWith> findByDepartment_DepartmentId(Integer deptId);
 
+        List<AffiliatedWith> findByPhysician_EmployeeId(Long physicianId);
+
 
 
 }
