@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AffiliatedWithRepository extends JpaRepository<AffiliatedWith, AffiliatedWithId> {
@@ -19,7 +20,7 @@ public interface AffiliatedWithRepository extends JpaRepository<AffiliatedWith, 
 
         boolean existsByPhysicianEmployeeIdAndPrimaryAffiliationTrue(Integer physicianId);
 
-
+        Optional<AffiliatedWith> findByPhysicianEmployeeIdAndDepartmentDepartmentId(Integer physicianId, Integer departmentId);
 
 
 }

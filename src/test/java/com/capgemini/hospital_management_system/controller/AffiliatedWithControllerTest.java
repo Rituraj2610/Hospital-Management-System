@@ -2,6 +2,7 @@ package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.AffiliatedWithDto;
 import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.dto.UpdatePrimaryAffiliationDto;
 import com.capgemini.hospital_management_system.model.AffiliatedWith;
 import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
@@ -90,6 +91,36 @@ public class AffiliatedWithControllerTest {
         assertNotNull(responseEntity.getBody());
         assertTrue(responseEntity.getBody().getData());
         assertEquals("Primary affiliation status retrieved", responseEntity.getBody().getMessage());
+    }
+
+
+    @Test
+    void testUpdatePrimaryAffiliation() {
+        UpdatePrimaryAffiliationDto dto = new UpdatePrimaryAffiliationDto();
+        dto.setDepartmentId(2);
+        dto.setPrimaryAffiliation(true);
+
+        Physician physician = new Physician();
+        physician.setEmployeeId(1);
+
+        Department department = new Department();
+        department.setDepartmentId(2);
+
+        AffiliatedWith affiliation = new AffiliatedWith();
+        affiliation.setPhysician(physician);
+        affiliation.setDepartment(department);
+        affiliation.setPrimaryAffiliation(false);
+
+        when(physicianRepository.findById(1)).thenReturn(Optional.of(physician));
+        when(departmentRepository.findById(2)).thenReturn(Optional.of(department));
+        when(affiliatedWithRepository.findByPhysicianEmployeeIdAndDepartmentDepartmentId(1, 2))
+                .thenReturn(Optional.of(affiliation));
+        when(affiliatedWithRepository.save(affiliation)).thenReturn(affiliation);
+
+        ResponseEntity<Response<Boolean>> response = affiliatedWithController.updatePrimaryAffiliation(1, dto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().getData());
     }
 
 

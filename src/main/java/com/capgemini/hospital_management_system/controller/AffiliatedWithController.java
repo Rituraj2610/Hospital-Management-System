@@ -1,10 +1,7 @@
 package com.capgemini.hospital_management_system.controller;
 
 
-import com.capgemini.hospital_management_system.dto.AffiliatedWithDto;
-import com.capgemini.hospital_management_system.dto.DepartmentDto;
-import com.capgemini.hospital_management_system.dto.PhysicianDepartmentDto;
-import com.capgemini.hospital_management_system.dto.Response;
+import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.AffiliatedWith;
 import com.capgemini.hospital_management_system.model.Department;
@@ -142,6 +139,39 @@ public class AffiliatedWithController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
+    @PutMapping("/primary/{physicianId}")
+    public ResponseEntity<Response<Boolean>> updatePrimaryAffiliation(
+            @PathVariable Integer physicianId,
+            @RequestBody UpdatePrimaryAffiliationDto dto) {
+
+        Physician physician = physicianRepository.findById(physicianId)
+                .orElseThrow(() -> new EntityNotFoundException("Physician not found"));
+
+        Department department = departmentRepository.findById(dto.getDepartmentId())
+                .orElseThrow(() -> new EntityNotFoundException("Department not found"));
+
+        AffiliatedWith affiliation = affiliatedWithRepository
+                .findByPhysicianEmployeeIdAndDepartmentDepartmentId(physicianId, dto.getDepartmentId())
+                .orElseThrow(() -> new EntityNotFoundException("Affiliation not found"));
+
+        if (Boolean.TRUE.equals(affiliation.getPrimaryAffiliation())
+                && Boolean.TRUE.equals(dto.getPrimaryAffiliation())) {
+            throw new IllegalStateException("This department is already marked as the primary affiliation.");
+        }
+
+        affiliation.setPrimaryAffiliation(dto.getPrimaryAffiliation());
+        affiliatedWithRepository.save(affiliation);
+
+        Response<Boolean> response = Response.<Boolean>builder()
+                .status(HttpStatus.OK.value())
+                .message("Primary affiliation updated successfully")
+                .data(true)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 
 }
