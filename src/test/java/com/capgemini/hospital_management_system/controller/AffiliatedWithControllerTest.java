@@ -20,8 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,6 +73,25 @@ public class AffiliatedWithControllerTest {
         assertEquals("Affiliation created successfully", responseEntity.getBody().getMessage());
         assertEquals("Affiliation between Physician and Department has been created.", responseEntity.getBody().getData());
     }
+
+    @Test
+    void testHasPrimaryAffiliation() {
+        Integer physicianId = 1;
+
+        // Mock the repository method
+        when(affiliatedWithRepository.existsByPhysicianEmployeeIdAndPrimaryAffiliationTrue(physicianId))
+                .thenReturn(true);
+
+        // Call the controller method
+        ResponseEntity<Response<Boolean>> responseEntity = affiliatedWithController.hasPrimaryAffiliation(physicianId);
+
+        // Assert response status and body
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+        assertTrue(responseEntity.getBody().getData());
+        assertEquals("Primary affiliation status retrieved", responseEntity.getBody().getMessage());
+    }
+
 
 
 

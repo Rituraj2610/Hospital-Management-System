@@ -128,5 +128,20 @@ public class AffiliatedWithController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @GetMapping("/primary/{physicianId}")
+    public ResponseEntity<Response<Boolean>> hasPrimaryAffiliation(@PathVariable Integer physicianId) {
+        boolean hasPrimary = affiliatedWithRepository.existsByPhysicianEmployeeIdAndPrimaryAffiliationTrue(physicianId);
+
+        Response<Boolean> response = Response.<Boolean>builder()
+                .status(HttpStatus.OK.value())
+                .message("Primary affiliation status retrieved")
+                .data(hasPrimary)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 
 }
