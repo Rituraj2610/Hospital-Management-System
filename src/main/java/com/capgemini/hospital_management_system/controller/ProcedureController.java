@@ -71,6 +71,20 @@ public class ProcedureController {
         return new ResponseEntity<>(response, filtered.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.OK);
     }
 
+    @PostMapping
+    public ResponseEntity<String> createProcedure(@RequestBody ProcedureDTO dto) {
+        // Convert DTO to entity
+        Procedure procedure = new Procedure();
+        procedure.setCode(dto.getCode());
+        procedure.setName(dto.getName());
+        procedure.setCost(dto.getCost());
+
+        // Save to DB
+        procedureRepository.save(procedure);
+
+        return ResponseEntity.status(201).body("Record Created Successfully");
+    }
+
 
 
 
