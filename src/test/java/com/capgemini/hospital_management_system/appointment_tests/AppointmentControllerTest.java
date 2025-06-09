@@ -1,15 +1,9 @@
 package com.capgemini.hospital_management_system.appointment_tests;
 
 import com.capgemini.hospital_management_system.controller.AppointmentController;
-import com.capgemini.hospital_management_system.dto.AppointmentDTO;
-import com.capgemini.hospital_management_system.dto.NurseAppointmentDTO;
-import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
-import com.capgemini.hospital_management_system.dto.PhysicianAppointmentDTO;
+import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
-import com.capgemini.hospital_management_system.mapper.AppointmentMapper;
-import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
-import com.capgemini.hospital_management_system.mapper.PatientMapper;
-import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
+import com.capgemini.hospital_management_system.mapper.*;
 import com.capgemini.hospital_management_system.model.*;
 import com.capgemini.hospital_management_system.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +47,7 @@ public class AppointmentControllerTest {
     private PhysicianMapper physicianMapper;
 
     @MockitoBean
-    private NurseCustomMapper nurseCustomMapper;
+    private NurseMapper nurseCustomMapper;
 
     @Test
     @DisplayName("Get all appointments")
