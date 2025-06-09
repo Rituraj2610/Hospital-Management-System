@@ -8,6 +8,10 @@ import com.capgemini.hospital_management_system.repository.DepartmentRepository;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +34,6 @@ public class DepartmentController {
     @Autowired
     private ModelMapper modelMapper;
 
-
-
     @PostMapping
     public ResponseEntity<Response<DepartmentDto>> createDepartment(@RequestBody CreateDepartmentDto createDepartmentDto) {
 
@@ -40,6 +42,7 @@ public class DepartmentController {
                         "Physician not found with ID: " + createDepartmentDto.getPhysicianId()));
 
         Department department = new Department();
+
         department.setDepartmentId(createDepartmentDto.getDeptId());
         department.setName(createDepartmentDto.getName());
         department.setHead(physician);
@@ -62,39 +65,39 @@ public class DepartmentController {
     }
 
 
-
     @GetMapping("/")
-    public ResponseEntity<Response<List<DepartmentDto>>> getAllDepartment() {
+    public ResponseEntity<Response<List<DepartmentDto>>> getAllDepartment(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "4") int size) {
 
-        List<Department> departmentList = departmentRepository.findAll();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("departmentId").descending());
+        Page<Department> departmentPage = departmentRepository.findAll(pageable);
 
-        if (departmentList.isEmpty()) {
+        if (departmentPage.isEmpty()) {
             throw new EntityNotFoundException("No departments found.");
         }
 
-        List<DepartmentDto> departmentDtoList = departmentList.stream()
+        List<DepartmentDto> departmentDtoList = departmentPage.getContent().stream()
                 .map(department -> {
                     DepartmentDto dto = modelMapper.map(department, DepartmentDto.class);
-
-                    Physician head = department.getHead();
-                    if (head != null) {
-                        PhysicianDepartmentDto headDto = modelMapper.map(head, PhysicianDepartmentDto.class);
-                        dto.setPhysicianDetail(headDto);
+                    if (department.getHead() != null) {
+                        dto.setPhysicianDetail(modelMapper.map(department.getHead(), PhysicianDepartmentDto.class));
                     }
-
                     return dto;
-                })
-                .collect(Collectors.toList());
+                }).collect(Collectors.toList());
 
+        // Only send list — avoid sending Pageable/Sort metadata
         Response<List<DepartmentDto>> response = Response.<List<DepartmentDto>>builder()
                 .status(HttpStatus.OK.value())
-                .message("Department list fetched successfully")
+                .message("Departments fetched successfully")
                 .data(departmentDtoList)
                 .time(LocalDateTime.now())
                 .build();
 
-        return new ResponseEntity<>(response , HttpStatus.FOUND);
+        return new ResponseEntity<>(response, HttpStatus.FOUND);
     }
+
+
 
 
 
