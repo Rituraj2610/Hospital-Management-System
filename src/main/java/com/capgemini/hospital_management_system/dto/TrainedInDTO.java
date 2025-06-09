@@ -3,8 +3,7 @@ package com.capgemini.hospital_management_system.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -12,6 +11,7 @@ import java.time.LocalDate;
 public class TrainedInDTO {
     private Integer physicianId;
     private Integer treatmentId;
-    private LocalDate certificationDate;
-    private LocalDate certificationExpires;
+    private Integer procedureId;
+    private LocalDateTime certificationDate;
+    private LocalDateTime certificationExpires;
 }

@@ -7,11 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface TrainedInRepository extends JpaRepository<TrainedIn, TrainedInId> {
     List<TrainedIn> findByPhysicianEmployeeId(Integer physicianId);
-    List<TrainedIn> findByTreatmentCode(@Param("procedureId") Integer procedureId);
-
+    List<TrainedIn> findByTreatmentCode(Integer procedureId);
+    List<TrainedIn> findByPhysicianEmployeeIdAndCertificationExpiresBetween(Integer physicianId, LocalDateTime start, LocalDateTime end);
 }

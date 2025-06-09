@@ -9,11 +9,13 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface TrainedInMapping {
-    @Mapping(source = "physician.employeeId", target = "physicianId")
+
+    @Mapping(target = "physicianId", source = "physician.employeeId")
+    @Mapping(target = "procedureId", source = "treatment.code")
     TrainedInDTO toDTO(TrainedIn trainedIn);
 
-    @Mapping(source = "physicianId", target = "physician.employeeId")
-    @Mapping(source = "treatmentId", target = "treatment.code")
+    @Mapping(target = "physician.employeeId", source = "physicianId")
+    @Mapping(target = "treatment.code", source = "procedureId")
     TrainedIn toEntity(TrainedInDTO trainedInDTO);
 
     List<TrainedInDTO> toDTOList(List<TrainedIn> trainedIns);
