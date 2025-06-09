@@ -85,6 +85,27 @@ public class ProcedureController {
         return ResponseEntity.status(201).body("Record Created Successfully");
     }
 
+    @PutMapping("/cost/{id}")
+    public ResponseEntity<?> updateProcedureCost(
+            @PathVariable Integer id,
+            @RequestBody Map<String, Double> body) {
+
+        // Extract cost value from request body
+        Double newCost = body.get("cost");
+
+        // Find the procedure by ID
+        Optional<Procedure> optionalProcedure = procedureRepository.findById(id);
+        if (optionalProcedure.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Update and save the new cost
+        Procedure procedure = optionalProcedure.get();
+        procedure.setCost(newCost);
+        procedureRepository.save(procedure);
+
+        return ResponseEntity.ok("Procedure cost updated successfully.");
+    }
 
 
 
