@@ -6,14 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class Response<T> {
-    private int status;
-    private String message;
-    private T data;
-    @Builder.Default
-    private LocalDateTime time = LocalDateTime.now();
+public class AppointmentDatesDTO {
+    LocalDateTime appointmentDate;
 }
-

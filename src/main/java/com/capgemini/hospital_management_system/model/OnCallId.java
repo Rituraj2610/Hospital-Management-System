@@ -16,5 +16,5 @@ public class OnCallId implements Serializable {
     private LocalDateTime onCallStart;
     private LocalDateTime onCallEnd;
 
-
 }
+
