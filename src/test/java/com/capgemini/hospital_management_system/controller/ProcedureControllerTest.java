@@ -54,5 +54,34 @@ public class ProcedureControllerTest {
         assertEquals("Procedure not found with code: 999", response.getBody().getMessage());
         assertTrue(response.getBody().getData().isEmpty());
     }
+    @Test
+    void testSearchProceduresByName_found() {
+        // Arrange
+        Procedure p1 = new Procedure();
+        p1.setCode(1);
+        p1.setName("X-Ray");
+        p1.setCost(100.0);
+
+        Procedure p2 = new Procedure();
+        p2.setCode(2);
+        p2.setName("MRI Scan");
+        p2.setCost(200.0);
+
+        when(procedureRepository.findAll()).thenReturn(List.of(p1, p2));
+
+        // Act
+        ResponseEntity<Response<List<ProcedureDTO>>> responseEntity = procedureController.searchProceduresByName("x-ray");
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Response<List<ProcedureDTO>> response = responseEntity.getBody();
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertEquals("Success", response.getMessage());
+        assertEquals(1, response.getData().size());
+        assertEquals("X-Ray", response.getData().get(0).getName());
+
+        verify(procedureRepository, times(1)).findAll();
+    }
 
 }
