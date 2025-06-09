@@ -5,20 +5,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("test")
+@RequestMapping("/test1")
 public class TestController {
     @GetMapping
-    public String testConctoller(){
-        return "Hello I am Batman";
-    }
-
-    @GetMapping("t1")
-    public String test1Conctoller(){
-        return "Hello I am Vengeance2";
-    }
-
-    @GetMapping("t2")
-    public String test2Conctoller(){
-        return "Hello I am iron man";
+    public String m1(){
+        return "I am batman";
     }
 }
