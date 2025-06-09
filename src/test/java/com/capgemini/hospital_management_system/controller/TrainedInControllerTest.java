@@ -123,6 +123,8 @@ class TrainedInControllerTest {
                 eq(physicianId), any(LocalDateTime.class), any(LocalDateTime.class));
         verify(procedureTrainedInMapping).toDTO(procedure);
     }
+    
+    
 
 
 }

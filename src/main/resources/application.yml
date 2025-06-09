@@ -3,10 +3,10 @@ spring:
     name: hospital-management-system
   datasource:
     #LOCAL DB
-    url: jdbc:mysql://localhost:3306/hms
+    url: jdbc:mysql://localhost:3306/hospital_management_system
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: aditi@30
+    password: ashu
 
 #    #REMOTE DB
 #    url: jdbc:mysql://localhost:3306/hospital_management_server

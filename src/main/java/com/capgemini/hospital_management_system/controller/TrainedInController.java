@@ -9,6 +9,8 @@ import com.capgemini.hospital_management_system.exception.EntityNotFoundExceptio
 import com.capgemini.hospital_management_system.mapper.PhysicianTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.ProcedureTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.TrainedInMapping;
+import com.capgemini.hospital_management_system.model.Physician;
+import com.capgemini.hospital_management_system.model.Procedure;
 import com.capgemini.hospital_management_system.model.TrainedIn;
 import com.capgemini.hospital_management_system.model.TrainedInId;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
@@ -104,5 +106,23 @@ public class TrainedInController {
             throw new EntityNotFoundException("Certification expiry date is required");
         }
     }
+    
+    @PostMapping
+	public ResponseEntity<Response<TrainedInDTO>> addCertificate(@RequestBody TrainedInDTO req) {
+	    Physician physician = physicianRepository.findById(req.getPhysicianId())
+	            .orElseThrow(() -> new RuntimeException("Physician not found"));
+
+	    Procedure procedure = procedureRepository.findById(req.getProcedureId())
+	            .orElseThrow(() -> new RuntimeException("Procedure not found"));
+
+	    TrainedIn trainedIn = trainedInMapping.toEntity(req);
+	    trainedIn.setPhysician(physician);
+	    trainedIn.setTreatment(procedure);
+
+	    TrainedIn saved = trainedInRepository.save(trainedIn);
+	    TrainedInDTO responseDto = trainedInMapping.toDTO(saved);
+	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", responseDto,LocalDateTime.now()));
+	}
+	
 
 }
