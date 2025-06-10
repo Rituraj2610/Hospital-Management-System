@@ -4,7 +4,7 @@ import com.capgemini.hospital_management_system.dto.NurseDto;
 import com.capgemini.hospital_management_system.dto.Response;
 import com.capgemini.hospital_management_system.exception.EntityAlreadyExist;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
-import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
+import com.capgemini.hospital_management_system.mapper.NurseMapper;
 import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.repository.NurseRepository;
 import lombok.AllArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.Optional;
 public class NurseController {
 
     private final NurseRepository nurseRepository;
-    private final NurseCustomMapper nurseCustomMapper;
+    private final NurseMapper nurseMapper;
 
     @PostMapping("/nurse")
     public ResponseEntity<Response<NurseDto>> addNurseDetails(@RequestBody NurseDto req) {
@@ -31,9 +31,9 @@ public class NurseController {
             throw new EntityAlreadyExist("Nurse with this ID " + req.getEmployeeId() + " already exists");
         }
 
-        Nurse nurse = nurseCustomMapper.toEntity(req);
+        Nurse nurse = nurseMapper.toEntity(req);
         nurseRepository.save(nurse);
-        NurseDto responseDto = nurseCustomMapper.toDto(nurse);
+        NurseDto responseDto = nurseMapper.toDto(nurse);
 
         return ResponseEntity.ok(
             new Response<>(
@@ -54,7 +54,7 @@ public class NurseController {
             throw new EntityNotFoundException("Not able to fetch all details of nurese");
         }
 
-        List<NurseDto> responseDto = nurseCustomMapper.toDtoList(nurses);
+        List<NurseDto> responseDto = nurseMapper.toDtoList(nurses);
         return ResponseEntity.ok(new Response<>(
             200,
             "Nurses retrieved successfully",
@@ -69,20 +69,20 @@ public class NurseController {
         Optional<Nurse> nurse = nurseRepository.findById(id);
 
         if (nurse.isEmpty()) {
-
+            
             throw new EntityNotFoundException("Nurse with employee ID " + id + " not found");
         }
 
-        NurseDto responseDto = nurseCustomMapper.toDto(nurse.get());
+        NurseDto responseDto = nurseMapper.toDto(nurse.get());
         return ResponseEntity.ok(new Response<>(
             200,
             "Nurse with employee ID " + responseDto.getEmployeeId() + " retrieved successfully",
             responseDto,
             LocalDateTime.now()
         ));
-
+        
     }
-
+    
     @GetMapping("/nurse/position/{empid}")
     public ResponseEntity<Response<String>> getPositionById(@PathVariable("empid") Integer id) {
         Optional<Nurse> nurse = nurseRepository.findById(id);
@@ -102,13 +102,13 @@ public class NurseController {
             )
         );
     }
-
+    
     //accessing status for nurse by id
-
+    
     @GetMapping("/nurse/registered/{empid}")
     public ResponseEntity<Response<Boolean>> isNurseRegistered(@PathVariable("empid") Integer id) {
         Optional<Nurse> nurse = nurseRepository.findById(id);
-
+        
         if (nurse.isEmpty()) {
             throw new EntityNotFoundException("Nurse with ID " + id + " does not exist");
         }
@@ -122,7 +122,7 @@ public class NurseController {
             )
         );
     }
-
+    
     @PutMapping("/nurse/registered/{empid}")
     public ResponseEntity<Response<Boolean>> updateRegisteredStatus(
             @PathVariable("empid") Integer id,
@@ -137,13 +137,13 @@ public class NurseController {
         return ResponseEntity.ok(new Response<>(
                 200,
                 "Registered status updated successfully for employee ID " + id,
-                nurse.getRegistered(),
+                nurse.getRegistered(), 
                 LocalDateTime.now()
         ));
     }
-
+    
     //updating ssn for nurse by id
-
+    
     @PutMapping("/nurse/ssn/{empid}")
     public ResponseEntity<Response<NurseDto>> updateNurseSSN(
             @PathVariable("empid") Integer id,
@@ -158,7 +158,7 @@ public class NurseController {
         nurse.setSsn(newSsn);   // Update SSN
         nurseRepository.save(nurse);
 
-        NurseDto responseDto = nurseCustomMapper.toDto(nurse);
+        NurseDto responseDto = nurseMapper.toDto(nurse);
 
         return ResponseEntity.ok(new Response<>(
                 200,
