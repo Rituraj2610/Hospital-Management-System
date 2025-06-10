@@ -536,5 +536,3 @@ public class AppointmentControllerTest {
 
 
 }
-
-
