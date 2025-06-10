@@ -259,7 +259,7 @@ public class AppointmentController {
       return new ResponseEntity<>(response, HttpStatus.OK);
    }
 
-    @GetMapping("/patient/{physicianId}")
+    @GetMapping("/patient/physician/{physicianId}")
     public ResponseEntity<Response<List<PatientAppointmentDTO>>> getPatientsByPhysicianId(@PathVariable("physicianId") Integer physicianId) {
         List<Appointment> appointments = appointmentRepository.findByPhysician_employeeId(physicianId);
         if(appointments.isEmpty()) {

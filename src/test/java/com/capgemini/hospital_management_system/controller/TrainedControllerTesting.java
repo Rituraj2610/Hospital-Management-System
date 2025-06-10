@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -40,22 +40,22 @@ public class TrainedControllerTesting {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private TrainedInRepository trainedInRepository;
 
-    @MockBean
+    @MockitoBean
     private PhysicianRepository physicianRepository;
 
-    @MockBean
+    @MockitoBean
     private ProceduresRepository procedureRepository;
 
-    @MockBean
+    @MockitoBean
     private TrainedInMapping trainedInMapping;
 
-    @MockBean
+    @MockitoBean
     private ProcedureTrainedInMapping procedureTrainedInMapping;
 
-    @MockBean
+    @MockitoBean
     private PhysicianTrainedInMapping physicianTrainedInMapping;
 
     @Test
