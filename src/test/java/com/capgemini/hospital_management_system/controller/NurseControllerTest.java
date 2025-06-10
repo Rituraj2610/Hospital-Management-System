@@ -1,7 +1,7 @@
 package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.NurseDto;
-import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
+import com.capgemini.hospital_management_system.mapper.NurseMapper;
 import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.repository.NurseRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +32,7 @@ class NurseControllerTest {
     private NurseRepository nurseRepository;
 
     @MockBean
-    private NurseCustomMapper nurseCustomMapper;
+    private NurseMapper nurseMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -54,9 +54,9 @@ class NurseControllerTest {
         nurseEntity.setRegistered(true);
         nurseEntity.setSsn(123456);
 
-        when(nurseCustomMapper.toEntity(any(NurseDto.class))).thenReturn(nurseEntity);
+        when(nurseMapper.toEntity(any(NurseDto.class))).thenReturn(nurseEntity);
         when(nurseRepository.save(any(Nurse.class))).thenReturn(nurseEntity);
-        when(nurseCustomMapper.toDto(any(Nurse.class))).thenReturn(dto);
+        when(nurseMapper.toDto(any(Nurse.class))).thenReturn(dto);
 
         mockMvc.perform(post("/api/nurse")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +82,7 @@ class NurseControllerTest {
         List<NurseDto> nurseDtos = List.of(nurseDto);
 
         when(nurseRepository.findAll()).thenReturn(nurses);
-        when(nurseCustomMapper.toDtoList(nurses)).thenReturn(nurseDtos);
+        when(nurseMapper.toDtoList(nurses)).thenReturn(nurseDtos);
 
         mockMvc.perform(get("/api/nurse"))
                 .andExpect(status().isOk())
@@ -103,7 +103,7 @@ class NurseControllerTest {
         nurseDto.setName("John Smith");
 
         when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
-        when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseDto);
+        when(nurseMapper.toDto(nurse)).thenReturn(nurseDto);
 
         mockMvc.perform(get("/api/nurse/1"))
                 .andExpect(status().isOk())
@@ -185,7 +185,7 @@ class NurseControllerTest {
 
         when(nurseRepository.findById(1)).thenReturn(Optional.of(nurse));
         when(nurseRepository.save(any(Nurse.class))).thenReturn(nurse);
-        when(nurseCustomMapper.toDto(any(Nurse.class))).thenReturn(updatedDto);
+        when(nurseMapper.toDto(any(Nurse.class))).thenReturn(updatedDto);
 
         mockMvc.perform(put("/api/nurse/ssn/1")
                 .contentType(MediaType.APPLICATION_JSON)

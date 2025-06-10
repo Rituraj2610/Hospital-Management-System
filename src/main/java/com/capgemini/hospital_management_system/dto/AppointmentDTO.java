@@ -22,3 +22,4 @@ public class AppointmentDTO {
 
     // constructors, getters, setters
 }
+
