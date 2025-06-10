@@ -22,8 +22,6 @@ public interface PhysicianRepository extends JpaRepository<Physician, Integer> {
 
   Optional<Physician> findByEmployeeId(Integer employeeId);
 
-    Optional<Physician> findByEmployeeId(Integer employeeId);
-
 
 	@Query("SELECT t.name AS procedureName, COUNT(p) AS physicianCount " +
 			"FROM Physician p JOIN p.trainedProcedures t " +
