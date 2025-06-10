@@ -24,7 +24,7 @@ public class PhysicianController {
 
     @Autowired
     private PhysicianRepository physicianRepository;
-    
+
     @Autowired
     private ModelMapper modelMapper;
     
@@ -184,6 +184,7 @@ public class PhysicianController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // GET /api/physician/group-by-position
     @GetMapping("/group-by-position")
     public ResponseEntity<Response<List<PhysicianGroupByPositionDto>>> getPhysicianNamesGroupedByPosition() {
 
