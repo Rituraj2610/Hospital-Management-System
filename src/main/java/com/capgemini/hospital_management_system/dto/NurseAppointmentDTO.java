@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class NurseAppointmentDTO {
 
+    private Integer employeeId;
+
     private String name;
 
     private String position;

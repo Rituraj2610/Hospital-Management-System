@@ -22,10 +22,10 @@ public class PhysicianController {
 
     @Autowired
     private PhysicianRepository physicianRepository;
-    
+
     @Autowired
     private ModelMapper modelMapper;
-    
+
     @GetMapping("/name/{name}")
     public ResponseEntity<Response<PhysicianDto>> getPhysicianByName(@PathVariable String name) {
         // Find Physician by name
