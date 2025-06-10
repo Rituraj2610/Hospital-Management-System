@@ -1,6 +1,7 @@
 package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.PhysicianDto;
+import com.capgemini.hospital_management_system.dto.PhysicianGroupByPositionDto;
 import com.capgemini.hospital_management_system.dto.Response;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.Physician;
@@ -184,6 +185,35 @@ public class PhysicianController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    // GET /api/physician/group-by-position
+    @GetMapping("/group-by-position")
+    public ResponseEntity<Response<List<PhysicianGroupByPositionDto>>> getPhysicianNamesGroupedByPosition() {
+
+        List<Object[]> data = physicianRepository.findPositionAndPhysicianNames();
+
+        // Grouping in Java
+        Map<String, List<String>> groupedMap = data.stream()
+                .collect(Collectors.groupingBy(
+                        row -> (String) row[0], // position
+                        Collectors.mapping(row -> (String) row[1], Collectors.toList())
+                ));
+
+        // Convert to List<PositionGroupDto>
+        List<PhysicianGroupByPositionDto> groupedList = groupedMap.entrySet().stream()
+                .map(entry -> new PhysicianGroupByPositionDto(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+
+        Response<List<PhysicianGroupByPositionDto>> response = Response.<List<PhysicianGroupByPositionDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Physicians grouped by position with names")
+                .data(groupedList)
+                .time(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 
     @GetMapping("/trained-procedures")
     public ResponseEntity<List<Map<String, Object>>> getTrainedProcedureCounts() {

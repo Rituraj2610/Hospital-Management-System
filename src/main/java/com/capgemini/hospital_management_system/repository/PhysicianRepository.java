@@ -1,5 +1,6 @@
 package com.capgemini.hospital_management_system.repository;
 
+
 import com.capgemini.hospital_management_system.model.Physician;
 import com.capgemini.hospital_management_system.projection.ProcedureTrainingCount;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,11 +12,18 @@ import java.util.Optional;
 
 @Repository
 public interface PhysicianRepository extends JpaRepository<Physician, Integer> {
+
 	Optional<Physician> findByName(String name);
 
 	List<Physician> findAllByPosition(String position);
 
+	@Query("SELECT p.position, p.name FROM Physician p")
+	List<Object[]> findPositionAndPhysicianNames();
+
+  Optional<Physician> findByEmployeeId(Integer employeeId);
+
     Optional<Physician> findByEmployeeId(Integer employeeId);
+
 
 	@Query("SELECT t.name AS procedureName, COUNT(p) AS physicianCount " +
 			"FROM Physician p JOIN p.trainedProcedures t " +
