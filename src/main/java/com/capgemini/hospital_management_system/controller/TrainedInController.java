@@ -21,9 +21,12 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -115,8 +118,9 @@ public class TrainedInController {
         }
     }
     
+    //adding trained in data
     @PostMapping
-	public ResponseEntity<Response<TrainedInDTO>> addCertificate(@RequestBody TrainedInDTO req) {
+	public ResponseEntity<Response<TrainedInDTO>> addTrainedIn(@RequestBody TrainedInDTO req) {
 	    Physician physician = physicianRepository.findById(req.getPhysicianId())
 	            .orElseThrow(() -> new RuntimeException("Physician not found"));
 
@@ -133,7 +137,11 @@ public class TrainedInController {
 	}
 	
     @GetMapping
-    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getCertifiedProcedures() {
+    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getCertifiedProcedures(
+            @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
+            @RequestParam(defaultValue = "2", required = false) Integer pageSize) {
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
         LocalDateTime now = LocalDateTime.now();
 
         Set<Integer> seenProcedureCodes = new HashSet<>();
@@ -144,48 +152,59 @@ public class TrainedInController {
                                trained.getTreatment() != null)
             .map(TrainedIn::getTreatment)
             .filter(procedure -> seenProcedureCodes.add(procedure.getCode()))
-            .map(procedureTrainedInMapping::toDTO) 
+            .map(procedureTrainedInMapping::toDTO)
             .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), certifiedProcedures.size());
+        List<ProcedureTrainedInDTO> pagedList = certifiedProcedures.subList(start, end);
 
         Response<List<ProcedureTrainedInDTO>> response = new Response<>(
             200,
             "Certified procedures fetched successfully",
-            certifiedProcedures,
+            pagedList,
             now
         );
 
         return ResponseEntity.ok(response);
     }
 
-    
+ // Fetching treatment by physician ID with pagination
     @GetMapping("/treatment/{physicianId}")
-    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getTreatmentsByPhysician(@PathVariable Integer physicianId) {
+    public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getTreatmentsByPhysician(
+            @PathVariable Integer physicianId,
+            @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
+            @RequestParam(defaultValue = "2", required = false) Integer pageSize) {
+
         LocalDateTime now = LocalDateTime.now();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         List<TrainedIn> trainedInList = trainedInRepository.findByPhysicianEmployeeId(physicianId);
-        List<ProcedureTrainedInDTO> procedures = new ArrayList<>();
+        List<ProcedureTrainedInDTO> allProcedures = new ArrayList<>();
 
         for (TrainedIn trainedIn : trainedInList) {
             if (trainedIn != null && trainedIn.getTreatment() != null) {
                 ProcedureTrainedInDTO dto = procedureTrainedInMapping.toDTO(trainedIn.getTreatment());
                 if (dto != null) {
-                    procedures.add(dto);
+                    allProcedures.add(dto);
                 }
             }
         }
 
+        // Manual pagination using subList
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allProcedures.size());
+        List<ProcedureTrainedInDTO> pagedList = allProcedures.subList(start, end);
+
         Response<List<ProcedureTrainedInDTO>> response = new Response<>(
             200,
             "Procedures for physician " + physicianId + " fetched successfully",
-            procedures,
+            pagedList,
             now
         );
 
         return ResponseEntity.ok(response);
     }
-
-
-
 
 
 }
