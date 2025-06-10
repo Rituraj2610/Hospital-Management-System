@@ -11,6 +11,9 @@ import com.capgemini.hospital_management_system.repository.AppointmentRepository
 import com.capgemini.hospital_management_system.repository.PatientRepository;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,15 +38,17 @@ public class PatientController {
 
     // GET /api/patient/ - Get list of all patients
     @GetMapping
-    public ResponseEntity<Response<List<PatientDTO>>> getAllPatients() {
-        List<Patient> patients = patientRepository.findAll();
-        if (patients.isEmpty()) {
+    public ResponseEntity<Response<List<PatientDTO>>> getAllPatients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Patient> patientPage = patientRepository.findAll(pageable);
+        if (patientPage.isEmpty()) {
             throw new EntityNotFoundException("No patients found");
         }
-        List<PatientDTO> patientDTOs = new ArrayList<>();
-        for (Patient patient : patients) {
-            patientDTOs.add(patientMapping.toDTO(patient));
-        }
+        List<PatientDTO> patientDTOs = patientPage.getContent().stream()
+                .map(patientMapping::toDTO)
+                .collect(Collectors.toList());
         Response<List<PatientDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
                 "Patients retrieved successfully",
@@ -51,6 +56,7 @@ public class PatientController {
                 LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     // GET /api/patient/{physicianid} - Retrieves patients associated with a specific physician
     @GetMapping("/{physicianid}")
