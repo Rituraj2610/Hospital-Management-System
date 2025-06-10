@@ -6,7 +6,7 @@ spring:
     url: jdbc:mysql://localhost:3306/hms
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: root
+    password: ashu
 
 #     #REMOTE DB
 #     url: jdbc:mysql://localhost:3306/hospital_management_server
