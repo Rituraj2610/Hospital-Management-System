@@ -1,6 +1,5 @@
 package com.capgemini.hospital_management_system.dto;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,16 +7,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class PhysicianDepartmentDto {
+public class DepartmentDto {
 
-
-    private Integer employeeId;
-
+    private Integer departmentId;
     private String name;
-
-    private String position;
-
-    private Integer ssn;
-
+    private PhysicianDepartmentDto physicianDetail;
 
 }

@@ -1,23 +1,14 @@
 package com.capgemini.hospital_management_system.dto;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class PhysicianDepartmentDto {
-
-
-    private Integer employeeId;
-
+public class ProcedureTrainedInDTO {
+    private Integer code;
     private String name;
-
-    private String position;
-
-    private Integer ssn;
-
-
+    private Double cost;
 }
