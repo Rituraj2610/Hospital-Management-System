@@ -111,7 +111,7 @@ class PatientControllerTest {
         when(patientMapping.toDTO(any(Patient.class))).thenReturn(patientDTO);
 
         ResponseEntity<Response<PatientDTO>> responseEntity =
-                patientController.getPatientByPhysicianAndId(physicianId, patientId);
+                patientController.getPatientByPhysicianAndId(patientId, physicianId);
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Response<PatientDTO> response = responseEntity.getBody();
