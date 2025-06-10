@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-
 @Repository
 public interface PhysicianRepository extends JpaRepository<Physician, Integer> {
 
@@ -20,6 +19,7 @@ public interface PhysicianRepository extends JpaRepository<Physician, Integer> {
 	@Query("SELECT p.position, p.name FROM Physician p")
 	List<Object[]> findPositionAndPhysicianNames();
 
+  Optional<Physician> findByEmployeeId(Integer employeeId);
 
 
 }
