@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -162,6 +164,20 @@ public class PatientController {
                 patientMapping.toDTO(patient),
                 LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/pcp-count")
+    public ResponseEntity<List<Map<String, Object>>> getPatientCountByPhysician() {
+        List<Object[]> results = patientRepository.countPatientsByPhysician();
+
+        List<Map<String, Object>> response = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("physicianName", row[0]);
+            map.put("patientCount", row[1]);
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 
 }

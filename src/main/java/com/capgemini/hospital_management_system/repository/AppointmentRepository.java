@@ -5,6 +5,7 @@ import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Nurse;
 import com.capgemini.hospital_management_system.model.Patient;
 import com.capgemini.hospital_management_system.model.Physician;
+import com.capgemini.hospital_management_system.projection.PhysicianAppointmentCount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -54,4 +55,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 
     @Query("SELECT a.patient FROM Appointment a WHERE a.prepNurse.employeeId = :employeeId AND a.patient.ssn = :patientId")
     Optional<Patient> findByNurseIdAndPatientId(@Param("nurseId") Integer nurseId, @Param("patientId") Integer patientId);
+
+    @Query("SELECT a.physician.name AS physicianName, COUNT(a) AS appointmentCount " +
+            "FROM Appointment a " +
+            "GROUP BY a.physician.name")
+    List<Object[]> countAppointmentsPerPhysician();
 }
