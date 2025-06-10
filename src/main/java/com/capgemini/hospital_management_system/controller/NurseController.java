@@ -6,8 +6,15 @@ import com.capgemini.hospital_management_system.exception.EntityAlreadyExist;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
 import com.capgemini.hospital_management_system.model.Nurse;
+import com.capgemini.hospital_management_system.projection.NursePositionCount;
 import com.capgemini.hospital_management_system.repository.NurseRepository;
 import lombok.AllArgsConstructor;
+
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,21 +52,28 @@ public class NurseController {
         );
     }
 
-    // Getting all nurse details
+ // Getting all nurse details with pagination
     @GetMapping("/nurse")
-    public ResponseEntity<Response<List<NurseDto>>> getNurseDetails() {
-        List<Nurse> nurses = nurseRepository.findAll();
+    public ResponseEntity<Response<List<NurseDto>>> getNurseDetails(
+            @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
+            @RequestParam(defaultValue = "2", required = false) Integer pageSize) {
 
-        if (nurses.isEmpty()) {
-            throw new EntityNotFoundException("Not able to fetch all details of nurese");
+       
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Nurse> nursePage = nurseRepository.findAll(pageable);
+
+        if (nursePage.isEmpty()) {
+            throw new EntityNotFoundException("Page is Empty. Move to previous page");
         }
 
-        List<NurseDto> responseDto = nurseCustomMapper.toDtoList(nurses);
+        List<NurseDto> responseDto = nurseCustomMapper.toDtoList(nursePage.getContent());
+
         return ResponseEntity.ok(new Response<>(
-            200,
-            "Nurses retrieved successfully",
-            responseDto,
-            LocalDateTime.now()
+                200,
+                "Nurses retrieved successfully",
+                responseDto,
+                LocalDateTime.now()
         ));
     }
 
@@ -164,6 +178,20 @@ public class NurseController {
                 200,
                 "SSN updated successfully for employee ID " + id,
                 responseDto,
+                LocalDateTime.now()
+        ));
+    }
+
+    //fetching 
+    @GetMapping("/nurse/group-by-position")
+    public ResponseEntity<Response<List<NursePositionCount>>> getNurseCountByPosition() {
+    	
+        List<NursePositionCount> groupedData = nurseRepository.countNursesByPosition();
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "Nurse counts by position retrieved successfully",
+                groupedData,
                 LocalDateTime.now()
         ));
     }

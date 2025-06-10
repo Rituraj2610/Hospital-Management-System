@@ -349,7 +349,7 @@ public class AppointmentControllerTest {
         Mockito.when(appointmentRepository.findByPhysician_employeeId(10)).thenReturn(List.of(appointment));
         Mockito.when(patientListMapper.appointmentToPatientList(Mockito.anyList())).thenReturn(List.of(new PatientAppointmentDTO()));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/patient/10"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/patient/physician/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("patient recived successfully"))
@@ -361,7 +361,7 @@ public class AppointmentControllerTest {
     void getPatientsByPhysicianId_NotFound() throws Exception {
         Mockito.when(appointmentRepository.findByPhysician_employeeId(10)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/patient/10"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointment/patient/physician/10"))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
                 .andExpect(result -> Assertions.assertEquals("No patient found with physician id 10", result.getResolvedException().getMessage()));

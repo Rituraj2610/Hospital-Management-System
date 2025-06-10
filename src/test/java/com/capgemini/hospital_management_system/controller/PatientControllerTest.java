@@ -14,6 +14,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.util.Arrays;
@@ -40,6 +44,7 @@ class PatientControllerTest {
     private Patient patient;
     private PatientDTO patientDTO;
     private Physician physician;
+    private Pageable pageable;
 
     @BeforeEach
     void setUp() {
@@ -52,17 +57,22 @@ class PatientControllerTest {
 
         patientDTO = new PatientDTO();
         patientDTO.setSsn(1001);
+
+        pageable = PageRequest.of(0, 10);
     }
 
     @Test
     void getAllPatients_Success() {
         // Arrange
         List<Patient> patients = Arrays.asList(patient);
-        when(patientRepository.findAll()).thenReturn(patients);
+        Page<Patient> patientPage = new PageImpl<>(patients, pageable, 1);
+
+        when(patientRepository.findAll(any(Pageable.class))).thenReturn(patientPage);
         when(patientMapping.toDTO(any(Patient.class))).thenReturn(patientDTO);
 
         // Act
-        ResponseEntity<Response<List<PatientDTO>>> responseEntity = patientController.getAllPatients();
+        ResponseEntity<Response<List<PatientDTO>>> responseEntity =
+                patientController.getAllPatients(0, 10);
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -72,7 +82,7 @@ class PatientControllerTest {
         assertEquals("Patients retrieved successfully", response.getMessage());
         assertEquals(1, response.getData().size());
         assertEquals(patientDTO, response.getData().get(0));
-        verify(patientRepository).findAll();
+        verify(patientRepository).findAll(pageable);
         verify(patientMapping).toDTO(patient);
     }
 
@@ -111,7 +121,7 @@ class PatientControllerTest {
         when(patientMapping.toDTO(any(Patient.class))).thenReturn(patientDTO);
 
         ResponseEntity<Response<PatientDTO>> responseEntity =
-                patientController.getPatientByPhysicianAndId(physicianId, patientId);
+                patientController.getPatientByPhysicianAndId(patientId, physicianId);
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Response<PatientDTO> response = responseEntity.getBody();

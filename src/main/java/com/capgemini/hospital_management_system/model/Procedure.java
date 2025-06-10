@@ -33,4 +33,7 @@ public class Procedure {
     @OneToMany(mappedBy = "procedure")
     @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
+
+    public Procedure(int i, String s, double v) {
+    }
 }

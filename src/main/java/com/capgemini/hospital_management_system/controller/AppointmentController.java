@@ -10,6 +10,7 @@ import com.capgemini.hospital_management_system.mapper.PatientMapper;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Patient;
 import com.capgemini.hospital_management_system.model.Room;
+import com.capgemini.hospital_management_system.projection.PhysicianAppointmentCount;
 import com.capgemini.hospital_management_system.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +33,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -48,6 +47,7 @@ public class AppointmentController {
     private final AppointmentMapper appointmentMapper;
     private final PhysicianMapper physicianMapper;
     private final NurseMapper nurseMapper;
+
 
     @GetMapping
     public ResponseEntity<Response<List<AppointmentDTO>>> fetchAllAppointments(){
@@ -259,7 +259,7 @@ public class AppointmentController {
       return new ResponseEntity<>(response, HttpStatus.OK);
    }
 
-    @GetMapping("/patient/{physicianId}")
+    @GetMapping("/patient/physician/{physicianId}")
     public ResponseEntity<Response<List<PatientAppointmentDTO>>> getPatientsByPhysicianId(@PathVariable("physicianId") Integer physicianId) {
         List<Appointment> appointments = appointmentRepository.findByPhysician_employeeId(physicianId);
         if(appointments.isEmpty()) {
@@ -426,5 +426,22 @@ public class AppointmentController {
               LocalDateTime.now()
       );
       return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+    @GetMapping("/grouped")
+    public ResponseEntity<List<Map<String, Object>>> getGroupedData() {
+        List<Object[]> results = appointmentRepository.countAppointmentsPerPhysician();
+        System.out.println("Endpoint HIT!");
+
+        List<Map<String, Object>> response = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("physicianName", row[0]);
+            map.put("appointmentCount", row[1]);
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -5,6 +5,7 @@ import com.capgemini.hospital_management_system.dto.PhysicianGroupByPositionDto;
 import com.capgemini.hospital_management_system.dto.Response;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.Physician;
+import com.capgemini.hospital_management_system.projection.ProcedureTrainingCount;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 
 import org.modelmapper.ModelMapper;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -213,4 +215,17 @@ public class PhysicianController {
     }
 
 
+    @GetMapping("/trained-procedures")
+    public ResponseEntity<List<Map<String, Object>>> getTrainedProcedureCounts() {
+        List<ProcedureTrainingCount> result = physicianRepository.countTrainedProceduresByName();
+
+        List<Map<String, Object>> response = result.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("procedureName", r.getProcedureName());
+            map.put("physicianCount", r.getPhysicianCount());
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
 }
