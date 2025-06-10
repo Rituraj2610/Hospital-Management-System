@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class DepartmentDto {
-
-    private Integer departmentId;
-    private String name;
-    private PhysicianDepartmentDto physicianDetail;
-
-}
+public class PhysicianTrainedInDTO {
+        private Integer employeeId;
+        private String name;
+        private String position;
+        private Integer ssn;
+    }
