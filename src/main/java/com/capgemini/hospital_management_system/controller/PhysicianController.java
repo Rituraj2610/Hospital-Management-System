@@ -212,5 +212,33 @@ public class PhysicianController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // GET /api/physician
+    @GetMapping
+    public ResponseEntity<Response<List<PhysicianDto>>> getAllPhysicians() {
+        // Fetch all records from DB
+        List<Physician> physicians = physicianRepository.findAll();
+
+        // Convert to List of DTOs
+        List<PhysicianDto> physicianDtos = physicians.stream()
+                .map(p -> new PhysicianDto(
+                        p.getEmployeeId(),
+                        p.getName(),
+                        p.getPosition(),
+                        p.getSsn()
+                ))
+                .collect(Collectors.toList());
+
+        // Wrap in Response object
+        Response<List<PhysicianDto>> response = new Response<>(
+                HttpStatus.OK.value(),
+                "All physicians fetched successfully!",
+                physicianDtos,
+                LocalDateTime.now()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 
 }
