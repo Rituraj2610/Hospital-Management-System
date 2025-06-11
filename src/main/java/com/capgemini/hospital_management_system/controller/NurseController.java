@@ -11,7 +11,9 @@ import lombok.AllArgsConstructor;
 
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 
 import org.springframework.http.ResponseEntity;
@@ -51,30 +53,51 @@ public class NurseController {
         );
     }
 
- // Getting all nurse details with pagination
     @GetMapping("/nurse")
     public ResponseEntity<Response<List<NurseDto>>> getNurseDetails(
-            @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
-            @RequestParam(defaultValue = "2", required = false) Integer pageSize) {
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "2") Integer pageSize,
+            @RequestParam(defaultValue = "employeeId") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String keyword) {
 
-       
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
 
-        Page<Nurse> nursePage = nurseRepository.findAll(pageable);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Nurse> nursePage;
 
-        if (nursePage.isEmpty()) {
-            throw new EntityNotFoundException("Page is Empty. Move to previous page");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // Check if keyword is numeric (for employeeId)
+            if (keyword.matches("\\d+")) {
+                int empId = Integer.parseInt(keyword);
+                Optional<Nurse> optionalNurse = nurseRepository.findById(empId);
+                List<Nurse> nurseList = optionalNurse.map(List::of).orElse(List.of());
+                nursePage = new PageImpl<>(nurseList, pageable, nurseList.size());
+            } else {
+                // Search by name if not numeric
+                nursePage = nurseRepository.findByNameContainingIgnoreCase(keyword, pageable);
+            }
+        } else {
+            nursePage = nurseRepository.findAll(pageable);
         }
 
-        List<NurseDto> responseDto = nurseCustomMapper.toDtoList(nursePage.getContent());
+        if (nursePage.isEmpty()) {
+            throw new EntityNotFoundException("Page is empty. Try another page or search again.");
+        }
+
+        List<NurseDto> dtoList = nurseCustomMapper.toDtoList(nursePage.getContent());
 
         return ResponseEntity.ok(new Response<>(
                 200,
                 "Nurses retrieved successfully",
-                responseDto,
+                dtoList,
                 LocalDateTime.now()
         ));
     }
+
+
 
     // Getting nurse by ID
     @GetMapping("/nurse/{empid}")
@@ -177,6 +200,29 @@ public class NurseController {
                 200,
                 "SSN updated successfully for employee ID " + id,
                 responseDto,
+                LocalDateTime.now()
+        ));
+    }
+
+    
+    @PutMapping("/nurse/{id}")
+    public ResponseEntity<Response<NurseDto>> partiallyUpdateNurse(
+            @PathVariable("id") Integer id,
+            @RequestBody NurseDto nurseDto) {
+
+        Nurse existingNurse = nurseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Nurse with ID " + id + " does not exist"));
+
+        // ✅ Use a custom update method in your mapper
+        nurseCustomMapper.updateNurseFromDto(nurseDto, existingNurse);
+
+        nurseRepository.save(existingNurse);
+        NurseDto updatedDto = nurseCustomMapper.toDto(existingNurse);
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "Nurse partially updated successfully",
+                updatedDto,
                 LocalDateTime.now()
         ));
     }
