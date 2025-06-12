@@ -12,6 +12,9 @@ import com.capgemini.hospital_management_system.repository.DepartmentRepository;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,16 +43,29 @@ public class AffiliatedWithController {
     private ModelMapper modelMapper;
 
     @GetMapping()
-    public ResponseEntity<Response<List<ResponseAffiliatedDto>>> getAllAffiliatedWith() {
-        List<AffiliatedWith> affiliatedWith = affiliatedWithRepository.findAll();
+    public ResponseEntity<Response<PageResponse<ResponseAffiliatedDto>>> getAllAffiliatedWith(
+            @PageableDefault(size = 20, sort = "physician") Pageable pageable,
+            @RequestParam(value = "physicianName", required = false) String physicianName,
+            @RequestParam(value = "departmentName", required = false) String departmentName
+    ) {
+        Page<AffiliatedWith> affiliatedWithPage = affiliatedWithRepository.findAllWithFilters(physicianName, departmentName, pageable);
         List<ResponseAffiliatedDto> responseAffiliatedDtoList = new ArrayList<>();
-        for(AffiliatedWith a : affiliatedWith){
+        for(AffiliatedWith a : affiliatedWithPage){
             responseAffiliatedDtoList.add(new ResponseAffiliatedDto(a.getPhysician().getName(), a.getDepartment().getName(), a.getPrimaryAffiliation()));
         }
-        Response<List<ResponseAffiliatedDto>> response = Response.<List<ResponseAffiliatedDto>>builder()
+        PageResponse<ResponseAffiliatedDto> pageResponse = new PageResponse<>(
+                responseAffiliatedDtoList,
+                affiliatedWithPage.getNumber(),
+                affiliatedWithPage.getSize(),
+                affiliatedWithPage.getTotalElements(),
+                affiliatedWithPage.getTotalPages(),
+                affiliatedWithPage.isFirst(),
+                affiliatedWithPage.isLast()
+        );
+        Response<PageResponse<ResponseAffiliatedDto>> response = Response.<PageResponse<ResponseAffiliatedDto>>builder()
                 .status(HttpStatus.OK.value())
                 .message("All Physicians affiliated with department")
-                .data(responseAffiliatedDtoList)
+                .data(pageResponse)
                 .time(LocalDateTime.now())
                 .build();
         return new ResponseEntity<>(response, HttpStatus.OK);
