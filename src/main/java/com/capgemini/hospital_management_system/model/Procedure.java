@@ -30,7 +30,7 @@ public class Procedure {
     @JsonBackReference
     private Set<Physician> trainedPhysicians = new HashSet<>();
 
-    @OneToMany(mappedBy = "procedure")
+    @OneToMany(mappedBy = "procedure", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
 

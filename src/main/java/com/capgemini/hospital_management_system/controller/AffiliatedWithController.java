@@ -4,6 +4,7 @@ package com.capgemini.hospital_management_system.controller;
 import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.model.AffiliatedWith;
+import com.capgemini.hospital_management_system.model.AffiliatedWithId;
 import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
 import com.capgemini.hospital_management_system.repository.AffiliatedWithRepository;
@@ -13,14 +14,17 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/affiliated_with")
+@Transactional
 public class AffiliatedWithController {
 
     @Autowired
@@ -34,6 +38,22 @@ public class AffiliatedWithController {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @GetMapping()
+    public ResponseEntity<Response<List<ResponseAffiliatedDto>>> getAllAffiliatedWith() {
+        List<AffiliatedWith> affiliatedWith = affiliatedWithRepository.findAll();
+        List<ResponseAffiliatedDto> responseAffiliatedDtoList = new ArrayList<>();
+        for(AffiliatedWith a : affiliatedWith){
+            responseAffiliatedDtoList.add(new ResponseAffiliatedDto(a.getPhysician().getName(), a.getDepartment().getName(), a.getPrimaryAffiliation()));
+        }
+        Response<List<ResponseAffiliatedDto>> response = Response.<List<ResponseAffiliatedDto>>builder()
+                .status(HttpStatus.OK.value())
+                .message("All Physicians affiliated with department")
+                .data(responseAffiliatedDtoList)
+                .time(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @GetMapping("/physicians/{deptId}")
     public ResponseEntity<Response<List<PhysicianDepartmentDto>>> getPhysiciansByDepartment(@PathVariable Integer deptId) {
@@ -173,5 +193,33 @@ public class AffiliatedWithController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+//    @PutMapping
+//    public ResponseEntity<Response<Integer>> updateDepartment(@RequestBody AffiliatedWithDto affiliatedWithDto) {
+//        AffiliatedWith affiliation = affiliatedWithRepository.findByPhysician_EmployeeId(affiliatedWithDto.getPhysicianId())
+//                .orElseThrow(() -> new EntityNotFoundException("Affiliation not found for physicianId: " + affiliatedWithDto.getPhysicianId() ));
+//        Physician physician = physicianRepository.findById(affiliatedWithDto.getPhysicianId())
+//                .orElseThrow(() -> new EntityNotFoundException("Physician not found: " + affiliatedWithDto.getPhysicianId()));
+//        Department department = departmentRepository.findById(affiliatedWithDto.getDepartmentId())
+//                .orElseThrow(() -> new EntityNotFoundException("Department not found: " + affiliatedWithDto.getDepartmentId()));
+//        affiliation.setPhysician(physician);
+//        affiliation.setDepartment(department);
+//        if (!physician.getAffiliations().contains(affiliation)) {
+//            physician.getAffiliations().add(affiliation);
+//        }
+//        if (!department.getAffiliations().contains(affiliation)) {
+//            department.getAffiliations().add(affiliation);
+//        }
+//
+//        // Save changes (cascades to Physician and Department via MERGE)
+//        affiliatedWithRepository.save(affiliation);
+//        Response<Integer> response = Response.<Integer>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("Primary affiliation updated successfully")
+//                .data(department.getDepartmentId())
+//                .time(LocalDateTime.now())
+//                .build();
+//        System.out.println();
+//        return new ResponseEntity<>(response, HttpStatus.OK);
+//    }
 
 }

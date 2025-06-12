@@ -32,15 +32,15 @@ public class Nurse {
     @Column(name = "SSN", nullable = false)
     private Integer ssn;
 
-    @OneToMany(mappedBy = "prepNurse")
+    @OneToMany(mappedBy = "prepNurse", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Appointment> appointments = new     HashSet<>();
 
-    @OneToMany(mappedBy = "nurse")
+    @OneToMany(mappedBy = "nurse", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<OnCall> onCalls = new HashSet<>();
 
-    @OneToMany(mappedBy = "assistingNurse")
+    @OneToMany(mappedBy = "assistingNurse", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
 

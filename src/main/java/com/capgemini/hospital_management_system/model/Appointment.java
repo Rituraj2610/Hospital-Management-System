@@ -17,37 +17,37 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Appointment {
-    @Id
-    @Column(name = "AppointmentID")
-    private Integer appointmentId;
+    public class Appointment {
+        @Id
+        @Column(name = "AppointmentID")
+        private Integer appointmentId;
 
-    @ManyToOne
-    @JoinColumn(name = "Patient", nullable = false)
-    @JsonBackReference
-    private Patient patient;
+        @ManyToOne
+        @JoinColumn(name = "Patient", nullable = false)
+        @JsonBackReference
+        private Patient patient;
 
-    @ManyToOne
-    @JoinColumn(name = "PrepNurse")
-    @JsonBackReference
-    private Nurse prepNurse;
+        @ManyToOne
+        @JoinColumn(name = "PrepNurse")
+        @JsonBackReference
+        private Nurse prepNurse;
 
-    @ManyToOne
-    @JoinColumn(name = "Physician", nullable = false)
-    @JsonBackReference
-    private Physician physician;
+        @ManyToOne
+        @JoinColumn(name = "Physician", nullable = false)
+        @JsonBackReference
+        private Physician physician;
 
-    @Column(name = "Starto", nullable = false)
-    private LocalDateTime start;
+        @Column(name = "Starto", nullable = false)
+        private LocalDateTime start;
 
-    @Column(name = "Endo", nullable = false)
-    private LocalDateTime end;
+        @Column(name = "Endo", nullable = false)
+        private LocalDateTime end;
 
-    @Column(name = "ExaminationRoom", nullable = false)
-    private String examinationRoom;
+        @Column(name = "ExaminationRoom", nullable = false)
+        private String examinationRoom;
 
-    @OneToMany(mappedBy = "appointment")
-    @JsonManagedReference
-    private Set<Prescribes> prescriptions = new HashSet<>();
+        @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
+        @JsonManagedReference
+        private Set<Prescribes> prescriptions = new HashSet<>();
 
-}
+    }
