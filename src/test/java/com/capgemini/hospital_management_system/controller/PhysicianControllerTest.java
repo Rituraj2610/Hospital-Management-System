@@ -6,7 +6,6 @@ import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -72,7 +71,6 @@ public class PhysicianControllerTest {
         PhysicianDto physicianDto = new PhysicianDto(2, "Jane Smith", "Neurologist", 54321);
 
         List<Physician> physicianList = List.of(physician);
-        List<PhysicianDto> physicianDtoList = List.of(physicianDto);
 
         when(physicianRepository.findAllByPosition("Neurologist")).thenReturn(physicianList);
         when(modelMapper.map(physician, PhysicianDto.class)).thenReturn(physicianDto);
@@ -191,4 +189,67 @@ public class PhysicianControllerTest {
                 .andExpect(jsonPath("$.message").value("Physician SSN updated successfully"))
                 .andExpect(jsonPath("$.data.ssn").value(99999));
     }
+
+
+    @Test
+    void testGetPhysicianNamesGroupedByPosition() throws Exception {
+
+        // Mocked data returned by repository (position, name)
+        List<Object[]> mockData = List.of(
+                new Object[]{"Head Surgeon", "Dr. John"},
+                new Object[]{"Head Surgeon", "Dr. Alice"},
+                new Object[]{"Resident Doctor", "Dr. Bob"}
+        );
+
+        // Mock repository call
+        when(physicianRepository.findPositionAndPhysicianNames()).thenReturn(mockData);
+
+        // Perform GET request and validate response
+        mockMvc.perform(get("/api/physician/group-by-position"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("Physicians grouped by position with names"))
+
+                // Check first group
+                .andExpect(jsonPath("$.data[?(@.position == 'Head Surgeon')].physicianNames[0]").value("Dr. John"))
+                .andExpect(jsonPath("$.data[?(@.position == 'Head Surgeon')].physicianNames[1]").value("Dr. Alice"))
+
+                // Check second group
+                .andExpect(jsonPath("$.data[?(@.position == 'Resident Doctor')].physicianNames[0]").value("Dr. Bob"));
+    }
+
+    @Test
+    void testGetAllPhysicians() throws Exception {
+        // Sample physician entity list
+        Physician physician1 = new Physician();
+        physician1.setEmployeeId(1);
+        physician1.setName("John Doe");
+        physician1.setPosition("Cardiologist");
+        physician1.setSsn(12345);
+
+        Physician physician2 = new Physician();
+        physician2.setEmployeeId(2);
+        physician2.setName("Jane Smith");
+        physician2.setPosition("Neurologist");
+        physician2.setSsn(67890);
+
+        List<Physician> physicianList = List.of(physician1, physician2);
+
+        // Corresponding DTOs
+        PhysicianDto dto1 = new PhysicianDto(1, "John Doe", "Cardiologist", 12345);
+        PhysicianDto dto2 = new PhysicianDto(2, "Jane Smith", "Neurologist", 67890);
+
+        when(physicianRepository.findAll()).thenReturn(physicianList);
+        when(modelMapper.map(physician1, PhysicianDto.class)).thenReturn(dto1);
+        when(modelMapper.map(physician2, PhysicianDto.class)).thenReturn(dto2);
+
+        mockMvc.perform(get("/api/physician"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("All physicians fetched successfully!"))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].name").value("John Doe"))
+                .andExpect(jsonPath("$.data[1].name").value("Jane Smith"));
+    }
+
 }

@@ -6,6 +6,7 @@ import com.capgemini.hospital_management_system.exception.EntityAlreadyExist;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.NurseCustomMapper;
 import com.capgemini.hospital_management_system.model.Nurse;
+import com.capgemini.hospital_management_system.projection.NursePositionCount;
 import com.capgemini.hospital_management_system.repository.NurseRepository;
 import lombok.AllArgsConstructor;
 
@@ -227,7 +228,19 @@ public class NurseController {
         ));
     }
 
-    
+    //fetching 
+    @GetMapping("/nurse/group-by-position")
+    public ResponseEntity<Response<List<NursePositionCount>>> getNurseCountByPosition() {
+    	
+        List<NursePositionCount> groupedData = nurseRepository.countNursesByPosition();
+
+        return ResponseEntity.ok(new Response<>(
+                200,
+                "Nurse counts by position retrieved successfully",
+                groupedData,
+                LocalDateTime.now()
+        ));
+    }
 
 
 

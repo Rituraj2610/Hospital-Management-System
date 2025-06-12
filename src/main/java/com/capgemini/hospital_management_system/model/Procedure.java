@@ -26,11 +26,14 @@ public class Procedure {
     @Column(name = "Cost", nullable = false)
     private Double cost;
 
-    @ManyToMany(mappedBy = "trainedProcedures")
+    @ManyToMany(mappedBy = "trainedProcedures", cascade = CascadeType.PERSIST)
     @JsonBackReference
     private Set<Physician> trainedPhysicians = new HashSet<>();
 
-    @OneToMany(mappedBy = "procedure")
+    @OneToMany(mappedBy = "procedure", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
+
+    public Procedure(int i, String s, double v) {
+    }
 }

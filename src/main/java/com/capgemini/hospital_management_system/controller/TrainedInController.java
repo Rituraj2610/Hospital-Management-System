@@ -1,10 +1,7 @@
 package com.capgemini.hospital_management_system.controller;
 
 
-import com.capgemini.hospital_management_system.dto.PhysicianTrainedInDTO;
-import com.capgemini.hospital_management_system.dto.ProcedureTrainedInDTO;
-import com.capgemini.hospital_management_system.dto.Response;
-import com.capgemini.hospital_management_system.dto.TrainedInDTO;
+import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.PhysicianTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.ProcedureTrainedInMapping;
@@ -17,11 +14,15 @@ import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import com.capgemini.hospital_management_system.repository.ProceduresRepository;
 import com.capgemini.hospital_management_system.repository.TrainedInRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,9 +55,6 @@ public class TrainedInController {
     private ProcedureTrainedInMapping procedureTrainedInMapping;
     @Autowired
     private PhysicianTrainedInMapping physicianTrainedInMapping;
-    
-
-
 
     @GetMapping("/physicians/{procedureId}")
     public ResponseEntity<Response<List<PhysicianTrainedInDTO>>> getPhysiciansByProcedure(@PathVariable int procedureId) {
@@ -74,6 +72,7 @@ public class TrainedInController {
                 LocalDateTime.now()
         ));
     }
+
     @GetMapping("/expiredsooncerti/{physicianId}")
     public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getExpiringCertifications(@PathVariable int physicianId) {
         LocalDateTime start = LocalDateTime.now();
@@ -93,7 +92,6 @@ public class TrainedInController {
                 LocalDateTime.now()
         ));
     }
-
 
     @PutMapping("/certificationexpiry/{physicianId}&{procedureId}")
     public ResponseEntity<Response<Boolean>> updateCertificationExpiry(
@@ -120,20 +118,53 @@ public class TrainedInController {
     
     //adding trained in data
     @PostMapping
-	public ResponseEntity<Response<TrainedInDTO>> addTrainedIn(@RequestBody TrainedInDTO req) {
-	    Physician physician = physicianRepository.findById(req.getPhysicianId())
-	            .orElseThrow(() -> new RuntimeException("Physician not found"));
+    @Transactional
+	public ResponseEntity<Response<TrainedInPostDTO>> addTrainedIn(@RequestBody TrainedInPostDTO req) {
 
-	    Procedure procedure = procedureRepository.findById(req.getProcedureId())
-	            .orElseThrow(() -> new RuntimeException("Procedure not found"));
+        if (req.getPhysician() == null || req.getProcedure() == null ||
+                req.getCertificationDate() == null || req.getCertificationExpires() == null) {
+            throw new IllegalArgumentException("Physician, Procedure, and certification dates are required");
+        }
 
-	    TrainedIn trainedIn = trainedInMapping.toEntity(req);
-	    trainedIn.setPhysician(physician);
-	    trainedIn.setTreatment(procedure);
+        if (req.getCertificationDate().isAfter(req.getCertificationExpires())) {
+            throw new IllegalArgumentException("Certification date must be before expiration date");
+        }
 
-	    TrainedIn saved = trainedInRepository.save(trainedIn);
-	    TrainedInDTO responseDto = trainedInMapping.toDTO(saved);
-	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", responseDto,LocalDateTime.now()));
+        Physician physician = physicianRepository.findById(req.getPhysician().getEmployeeId())
+                .orElseGet(() -> {
+                    Physician newPhysician = new Physician();
+                    newPhysician.setEmployeeId(req.getPhysician().getEmployeeId());
+                    newPhysician.setName(req.getPhysician().getName());
+                    newPhysician.setPosition(req.getPhysician().getPosition());
+                    newPhysician.setSsn(req.getPhysician().getSsn());
+                    return newPhysician; // Persisted via cascading
+                });
+        physicianRepository.save(physician);
+
+        Procedure procedure = procedureRepository.findById(req.getProcedure().getCode())
+                .orElseGet(() -> {
+                    Procedure newProcedure = new Procedure();
+                    newProcedure.setCode(req.getProcedure().getCode());
+                    newProcedure.setName(req.getProcedure().getName());
+                    newProcedure.setCost(req.getProcedure().getCost());
+                    return newProcedure; // Persisted via cascading
+                });
+        procedureRepository.save(procedure);
+        TrainedInId id = new TrainedInId(physician.getEmployeeId(), procedure.getCode());
+        if (trainedInRepository.existsById(id)) {
+            throw new IllegalStateException("Training relationship already exists");
+        }
+
+        TrainedIn trainedIn = new TrainedIn();
+        trainedIn.setId(id);
+        trainedIn.setPhysician(physician);
+        trainedIn.setTreatment(procedure);
+        trainedIn.setCertificationDate(req.getCertificationDate());
+        trainedIn.setCertificationExpires(req.getCertificationExpires());
+
+        TrainedIn saved = trainedInRepository.save(trainedIn);
+
+	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", req,LocalDateTime.now()));
 	}
 	
     @GetMapping
@@ -202,6 +233,44 @@ public class TrainedInController {
             pagedList,
             now
         );
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/dates")
+    public ResponseEntity<Response<PageResponse<TrainedInPostDTO>>> getByDates(
+            @PageableDefault(size = 2) Pageable pageable,
+            @RequestParam("startDate")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam("endDate")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+    ) {
+        Page<TrainedIn> page = trainedInRepository.findByDates(startDate, endDate, pageable);
+
+        if (page.isEmpty()) {
+            throw new EntityNotFoundException("No certifications found!");
+        }
+
+        List<TrainedInPostDTO> dtoList = page.getContent().stream()
+                .map(trainedInMapping::toPostDTO)
+                .collect(Collectors.toList());
+
+        PageResponse<TrainedInPostDTO> pageResponse = new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast()
+        );
+
+        Response<PageResponse<TrainedInPostDTO>> response = Response.<PageResponse<TrainedInPostDTO>>builder()
+                .status(200)
+                .message("Data fetched successfully!")
+                .data(pageResponse)
+                .build();
 
         return ResponseEntity.ok(response);
     }

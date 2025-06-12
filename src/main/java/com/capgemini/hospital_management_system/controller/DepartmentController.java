@@ -2,6 +2,8 @@ package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
+import com.capgemini.hospital_management_system.mapper.AffiliationPhysicianMapping;
+import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
 import com.capgemini.hospital_management_system.model.Department;
 import com.capgemini.hospital_management_system.model.Physician;
 import com.capgemini.hospital_management_system.repository.DepartmentRepository;
@@ -10,15 +12,18 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/department")
+@Transactional
 public class DepartmentController {
 
     @Autowired
@@ -30,35 +35,49 @@ public class DepartmentController {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private PhysicianMapper physicianMapper;
 
+    @Autowired
+    private AffiliationPhysicianMapping affiliationPhysicianMapping;
 
     @PostMapping
-    public ResponseEntity<Response<DepartmentDto>> createDepartment(@RequestBody CreateDepartmentDto createDepartmentDto) {
-
-        Physician physician = physicianRepository.findById(createDepartmentDto.getPhysicianId())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Physician not found with ID: " + createDepartmentDto.getPhysicianId()));
+    public ResponseEntity<?> createDepartment(@RequestBody CreateDepartmentDto request) {
 
         Department department = new Department();
-        department.setDepartmentId(createDepartmentDto.getDeptId());
-        department.setName(createDepartmentDto.getName());
-        department.setHead(physician);
+        department.setDepartmentId(request.getDeptId());
+        department.setName(request.getName());
+        if(request.getHead() != null) {
+            Physician head = physicianMapper.toEntity(request.getHead());
+            head.setDepartments(new HashSet<>());
+            head.setAffiliations(new HashSet<>());
+            department.setHead(head);
+        }
 
-        Department savedDepartment = departmentRepository.save(department);
+        if(request.getAffiliatedPhysicians() != null) {
+            for(AffiliatedPhysicianDto dto : request.getAffiliatedPhysicians()) {
+                Physician physician = affiliationPhysicianMapping.mapToPhysician(dto);
+                physician.setDepartments(new HashSet<>());
+                physician.setAffiliations(new HashSet<>());
+                department.addPhysicianAffiliation(physician, dto.getPrimaryAffiliation());
+            }
+        }
 
-        DepartmentDto responseDto = modelMapper.map(savedDepartment , DepartmentDto.class);
+        departmentRepository.save(department);
 
-        PhysicianDepartmentDto physicianDto = modelMapper.map(physician, PhysicianDepartmentDto.class);
-        responseDto.setPhysicianDetail(physicianDto);
+//        DepartmentDto responseDto = modelMapper.map(savedDepartment , DepartmentDto.class);
+//
+//        PhysicianDepartmentDto physicianDto = modelMapper.map(request.getHead(), PhysicianDepartmentDto.class);
+//        responseDto.setPhysicianDetail(physicianDto);
 
-        Response<DepartmentDto> response = Response.<DepartmentDto>builder()
-                .status(HttpStatus.CREATED.value())
-                .message("Department created successfully")
-                .data(responseDto)
-                .time(LocalDateTime.now())
-                .build();
+//        Response<String> response = Response.<DepartmentDto>builder()
+//                .status(HttpStatus.CREATED.value())
+//                .message("Department created successfully")
+//                .data(responseDto)
+//                .time(LocalDateTime.now())
+//                .build();
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>("Department created successfully", HttpStatus.CREATED);
     }
 
 
@@ -93,7 +112,7 @@ public class DepartmentController {
                 .time(LocalDateTime.now())
                 .build();
 
-        return new ResponseEntity<>(response , HttpStatus.FOUND);
+        return new ResponseEntity<>(response , HttpStatus.OK);
     }
 
 

@@ -27,7 +27,7 @@ public class Medication {
     @Column(name = "Description", nullable = false)
     private String description;
 
-    @OneToMany(mappedBy = "medication")
+    @OneToMany(mappedBy = "medication", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Prescribes> prescriptions = new HashSet<>();
 
