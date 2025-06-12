@@ -51,6 +51,25 @@ public class NurseCustomMapper {
 		return this.toDto(nurse);
 	}
 
+	//updating
+	public void updateNurseFromDto(NurseDto dto, Nurse entity) {
+	    if (dto == null || entity == null) return;
+
+	    if (dto.getName() != null) {
+	        entity.setName(dto.getName());
+	    }
+	    if (dto.getPosition() != null) {
+	        entity.setPosition(dto.getPosition());
+	    }
+	    if (dto.getSsn() != null) {
+	        entity.setSsn(dto.getSsn());
+	    }
+	    if (dto.getRegistered() != null) {
+	        entity.setRegistered(dto.getRegistered());
+	    }
+	}
+
+
 	
 
     
