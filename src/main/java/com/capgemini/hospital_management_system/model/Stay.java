@@ -36,7 +36,7 @@ public class Stay {
     @Column(name = "StayEnd", nullable = false)
     private LocalDateTime stayEnd;
 
-    @OneToMany(mappedBy = "stay")
+    @OneToMany(mappedBy = "stay", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
 

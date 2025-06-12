@@ -9,8 +9,8 @@ import org.mapstruct.Mapping;
 public interface PhysicianMapper {
 
     @Mapping(target = "departments", ignore = true)
-    @Mapping(target = "affiliatedDepartments", ignore = true)
-    @Mapping(target = "trainedProcedures", ignore = true)
+//    @Mapping(target = "affiliatedDepartments", ignore = true)
+//    @Mapping(target = "trainedProcedures", ignore = true)
     @Mapping(target = "appointments", ignore = true)
     @Mapping(target = "prescriptions", ignore = true)
     @Mapping(target = "undergoes", ignore = true)

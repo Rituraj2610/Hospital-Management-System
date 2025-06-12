@@ -3,39 +3,30 @@ package com.capgemini.hospital_management_system.controller;
 import com.capgemini.hospital_management_system.dto.AppointmentDatesDTO;
 import com.capgemini.hospital_management_system.dto.PatientAppointmentDTO;
 import com.capgemini.hospital_management_system.dto.Response;
-import com.capgemini.hospital_management_system.dto.RoomAppointmentDto;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.PatientListMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Patient;
-import com.capgemini.hospital_management_system.model.Room;
+import com.capgemini.hospital_management_system.projection.RoomAppointmentCount;
 import com.capgemini.hospital_management_system.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.capgemini.hospital_management_system.dto.*;
-import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
 import com.capgemini.hospital_management_system.mapper.*;
-import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Nurse;
-import com.capgemini.hospital_management_system.model.Patient;
 import com.capgemini.hospital_management_system.model.Physician;
-import com.capgemini.hospital_management_system.repository.AppointmentRepository;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -49,50 +40,74 @@ public class AppointmentController {
     private final PhysicianMapper physicianMapper;
     private final NurseMapper nurseMapper;
 
+
     @GetMapping
-    public ResponseEntity<Response<List<AppointmentDTO>>> fetchAllAppointments(){
-        List<Appointment> appointmentList = appointmentRepository.findAll();
-        if(appointmentList.isEmpty()){
+    public ResponseEntity<Response<PageResponse<AppointmentDTO>>> fetchAllAppointments(
+            @PageableDefault(size = 20, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findAll(pageable);
+        if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No Appointments found!");
         }
 
-        List<AppointmentDTO> appointmentDTOList = appointmentList
-                .stream()
+        List<AppointmentDTO> appointmentDTOList = appointmentPage.getContent().stream()
                 .map(appointmentMapper::toDto)
-                .toList();
+                .collect(Collectors.toList());
 
-        Response<List<AppointmentDTO>> response = Response.<List<AppointmentDTO>>builder()
+        PageResponse<AppointmentDTO> pageResponse = new PageResponse<>(
+                appointmentDTOList,
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+
+        Response<PageResponse<AppointmentDTO>> response = Response.<PageResponse<AppointmentDTO>>builder()
                 .status(200)
                 .message("Found all appointments")
-                .data(appointmentDTOList)
+                .data(pageResponse)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{startdate}")
-    public ResponseEntity<Response<List<AppointmentDTO>>> fetchAppointmentsByStartBy(@PathVariable LocalDateTime startdate){
-        List<Appointment> appointmentList = appointmentRepository.findByStart(startdate);
-        if(appointmentList.isEmpty()){
+    public ResponseEntity<Response<PageResponse<AppointmentDTO>>> fetchAppointmentsByStartBy(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startdate,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByStart(startdate, pageable);
+        if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No appointments found!");
         }
-        List<AppointmentDTO> appointmentDTOList = appointmentList.stream()
-                .map(appointmentMapper::toDto)
-                .toList();
 
-        Response<List<AppointmentDTO>> response = Response.<List<AppointmentDTO>>builder()
+        List<AppointmentDTO> appointmentDTOList = appointmentPage.getContent().stream()
+                .map(appointmentMapper::toDto)
+                .collect(Collectors.toList());
+
+        PageResponse<AppointmentDTO> pageResponse = new PageResponse<>(
+                appointmentDTOList,
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+
+        Response<PageResponse<AppointmentDTO>> response = Response.<PageResponse<AppointmentDTO>>builder()
                 .status(200)
                 .message("Found all appointments")
-                .data(appointmentDTOList)
+                .data(pageResponse)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/patient/{appointmentid}")
-    public ResponseEntity<Response<PatientAppointmentDTO>> fetchPatientByAppointmentId(@PathVariable Integer appointmentid){
+    public ResponseEntity<Response<PatientAppointmentDTO>> fetchPatientByAppointmentId(@PathVariable Integer appointmentid) {
         Optional<Patient> optionalPatient = appointmentRepository.findPatientByAppointmentId(appointmentid);
-        if(optionalPatient.isEmpty()){
+        if (optionalPatient.isEmpty()) {
             throw new EntityNotFoundException("Patient not found!");
         }
         Response<PatientAppointmentDTO> response = Response.<PatientAppointmentDTO>builder()
@@ -105,9 +120,9 @@ public class AppointmentController {
     }
 
     @GetMapping("/physician/{appointmentid}")
-    public ResponseEntity<Response<PhysicianAppointmentDTO>> findPhysicianByAppointmentId(@PathVariable Integer appointmentid){
+    public ResponseEntity<Response<PhysicianAppointmentDTO>> findPhysicianByAppointmentId(@PathVariable Integer appointmentid) {
         Optional<Physician> optionalPhysician = appointmentRepository.findPhysicianByAppointmentId(appointmentid);
-        if(optionalPhysician.isEmpty()){
+        if (optionalPhysician.isEmpty()) {
             throw new EntityNotFoundException("Physician not found!");
         }
         Response<PhysicianAppointmentDTO> response = Response.<PhysicianAppointmentDTO>builder()
@@ -119,10 +134,11 @@ public class AppointmentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+
     @GetMapping("/nurse/{appointmentid}")
-    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByAppointmentId(@PathVariable Integer appointmentid){
+    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByAppointmentId(@PathVariable Integer appointmentid) {
         Optional<Nurse> optionalNurse = appointmentRepository.fetchNurseByAppointmentId(appointmentid);
-        if(optionalNurse.isEmpty()){
+        if (optionalNurse.isEmpty()) {
             throw new EntityNotFoundException("Nurse not found!");
         }
         Response<NurseAppointmentDTO> response = Response.<NurseAppointmentDTO>builder()
@@ -135,10 +151,10 @@ public class AppointmentController {
     }
 
     @GetMapping("/examinationroom/{appointmentid}")
-    public ResponseEntity<Response<String>> fetchRoomByAppointmentId(@PathVariable Integer appointmentid){
+    public ResponseEntity<Response<String>> fetchRoomByAppointmentId(@PathVariable Integer appointmentid) {
         String room = appointmentRepository.findExaminationRoomByAppointmentId(appointmentid);
-        if(room.isEmpty()){
-            throw  new EntityNotFoundException("Room not found");
+        if (room.isEmpty()) {
+            throw new EntityNotFoundException("Room not found");
         }
         Response<String> response = Response.<String>builder()
                 .status(200)
@@ -150,36 +166,51 @@ public class AppointmentController {
     }
 
     @GetMapping("/physician/patient/{patientid}")
-    public ResponseEntity<Response<List<PhysicianAppointmentDTO>>> fetchPhysicianByPatientId(@PathVariable Integer patientid){
-        List<Appointment> appointmentList = appointmentRepository.findByPatient_Ssn(patientid);
-        if(appointmentList.isEmpty()){
-            throw  new EntityNotFoundException("No appointment found for the given patient");
+    public ResponseEntity<Response<PageResponse<PhysicianAppointmentDTO>>> fetchPhysicianByPatientId(
+            @PathVariable Integer patientid,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByPatient_Ssn(patientid, pageable);
+        if (appointmentPage.isEmpty()) {
+            throw new EntityNotFoundException("No appointment found for the given patient");
         }
-        List<PhysicianAppointmentDTO> appointmentDTOList = appointmentList.stream()
+
+        List<PhysicianAppointmentDTO> appointmentDTOList = appointmentPage.getContent().stream()
                 .filter(appointment -> appointment.getPhysician() != null)
                 .map(appointment -> physicianMapper.toDto(appointment.getPhysician()))
-                .toList();
+                .collect(Collectors.toList());
 
-        Response<List<PhysicianAppointmentDTO>> response = Response.<List<PhysicianAppointmentDTO>>builder()
+        PageResponse<PhysicianAppointmentDTO> pageResponse = new PageResponse<>(
+                appointmentDTOList,
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+
+        Response<PageResponse<PhysicianAppointmentDTO>> response = Response.<PageResponse<PhysicianAppointmentDTO>>builder()
                 .status(200)
                 .message("Found the physicians")
-                .data(appointmentDTOList)
+                .data(pageResponse)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/physician/{patientid}/{date}")
-    public ResponseEntity<Response<PhysicianAppointmentDTO>> fetchPhysicianByPatientIdByStartDate(@PathVariable Integer patientid, @PathVariable LocalDateTime date){
+    public ResponseEntity<Response<PhysicianAppointmentDTO>> fetchPhysicianByPatientIdByStartDate(
+            @PathVariable Integer patientid,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         Optional<Appointment> optionalAppointment = appointmentRepository.findByStartAndPatient_Ssn(date, patientid);
-        if(optionalAppointment.isEmpty()){
-            throw  new EntityNotFoundException("No appointment found");
+        if (optionalAppointment.isEmpty()) {
+            throw new EntityNotFoundException("No appointment found");
         }
 
         PhysicianAppointmentDTO physicianAppointmentDTO = physicianMapper.toDto(optionalAppointment.get().getPhysician());
         Response<PhysicianAppointmentDTO> response = Response.<PhysicianAppointmentDTO>builder()
                 .status(200)
-                .message("Found the physicians")
+                .message("Found the physician")
                 .data(physicianAppointmentDTO)
                 .build();
 
@@ -187,30 +218,45 @@ public class AppointmentController {
     }
 
     @GetMapping("/nurse/patient/{patientid}")
-    public ResponseEntity<Response<List<NurseAppointmentDTO>>> fetchNurseByPatientId(@PathVariable Integer patientid){
-        List<Appointment> appointmentList = appointmentRepository.findByPatient_Ssn(patientid);
-        if(appointmentList.isEmpty()){
-            throw  new EntityNotFoundException("No appoinments found");
+    public ResponseEntity<Response<PageResponse<NurseAppointmentDTO>>> fetchNurseByPatientId(
+            @PathVariable Integer patientid,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByPatient_Ssn(patientid, pageable);
+        if (appointmentPage.isEmpty()) {
+            throw new EntityNotFoundException("No appointments found");
         }
-        List<NurseAppointmentDTO> nurseAppointmentDTOList = appointmentList.stream()
+
+        List<NurseAppointmentDTO> nurseAppointmentDTOList = appointmentPage.getContent().stream()
                 .filter(appointment -> appointment.getPrepNurse() != null)
                 .map(appointment -> nurseMapper.toDto(appointment.getPrepNurse()))
-                .toList();
+                .collect(Collectors.toList());
 
-        Response<List<NurseAppointmentDTO>> response = Response.<List<NurseAppointmentDTO>>builder()
+        PageResponse<NurseAppointmentDTO> pageResponse = new PageResponse<>(
+                nurseAppointmentDTOList,
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+
+        Response<PageResponse<NurseAppointmentDTO>> response = Response.<PageResponse<NurseAppointmentDTO>>builder()
                 .status(200)
                 .message("Found the nurses")
-                .data(nurseAppointmentDTOList)
+                .data(pageResponse)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/nurse/{patientid}/{date}")
-    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByPatientIdByStartDate(@PathVariable Integer patientid, @PathVariable LocalDateTime date){
+    public ResponseEntity<Response<NurseAppointmentDTO>> fetchNurseByPatientIdByStartDate(
+            @PathVariable Integer patientid,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         Optional<Appointment> optionalAppointment = appointmentRepository.findByStartAndPatient_Ssn(date, patientid);
-        if(optionalAppointment.isEmpty()){
-            throw  new EntityNotFoundException("No appointment found");
+        if (optionalAppointment.isEmpty()) {
+            throw new EntityNotFoundException("No appointment found");
         }
 
         NurseAppointmentDTO nurseAppointmentDTO = nurseMapper.toDto(optionalAppointment.get().getPrepNurse());
@@ -242,67 +288,108 @@ public class AppointmentController {
 
   // AMAN
   @GetMapping("/date/{patientId}")
-  public ResponseEntity<Response<List<AppointmentDatesDTO>>> getDatesByPatientId(@PathVariable("patientId") Integer patientId) {
-       List<Appointment> appointments = appointmentRepository.findByPatient_Ssn(patientId);
-       if(appointments.isEmpty()) {
-           throw new EntityNotFoundException("No appointment found for patient id " + patientId);
-       }
-       List<AppointmentDatesDTO> dates = appointments.stream()
-               .map(appointment -> new AppointmentDatesDTO(appointment.getStart()))
-               .toList();
-      Response<List<AppointmentDatesDTO>> response = new Response<>(
-              HttpStatus.OK.value(),
-              "dates recived successfully",
+  public ResponseEntity<Response<PageResponse<AppointmentDatesDTO>>> getDatesByPatientId(
+          @PathVariable("patientId") Integer patientId,
+          @PageableDefault(size = 10, sort = "start") Pageable pageable) {
+      Page<Appointment> appointmentPage = appointmentRepository.findByPatient_Ssn(patientId, pageable);
+      if (appointmentPage.isEmpty()) {
+          throw new EntityNotFoundException("No appointment found for patient id " + patientId);
+      }
+
+      List<AppointmentDatesDTO> dates = appointmentPage.getContent().stream()
+              .map(appointment -> new AppointmentDatesDTO(appointment.getStart()))
+              .collect(Collectors.toList());
+
+      PageResponse<AppointmentDatesDTO> pageResponse = new PageResponse<>(
               dates,
+              appointmentPage.getNumber(),
+              appointmentPage.getSize(),
+              appointmentPage.getTotalElements(),
+              appointmentPage.getTotalPages(),
+              appointmentPage.isFirst(),
+              appointmentPage.isLast()
+      );
+
+      Response<PageResponse<AppointmentDatesDTO>> response = new Response<>(
+              HttpStatus.OK.value(),
+              "Dates received successfully",
+              pageResponse,
               LocalDateTime.now()
       );
+
       return new ResponseEntity<>(response, HttpStatus.OK);
-   }
+  }
 
     @GetMapping("/patient/physician/{physicianId}")
-    public ResponseEntity<Response<List<PatientAppointmentDTO>>> getPatientsByPhysicianId(@PathVariable("physicianId") Integer physicianId) {
-        List<Appointment> appointments = appointmentRepository.findByPhysician_employeeId(physicianId);
-        if(appointments.isEmpty()) {
+    public ResponseEntity<Response<PageResponse<PatientAppointmentDTO>>> getPatientsByPhysicianId(
+            @PathVariable("physicianId") Integer physicianId,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByPhysician_employeeId(physicianId, pageable);
+        if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No patient found with physician id " + physicianId);
         }
 
-        Response<List<PatientAppointmentDTO>> response = new Response<>(
+        PageResponse<PatientAppointmentDTO> pageResponse = new PageResponse<>(
+                patientListMapper.appointmentToPatientList(appointmentPage.getContent()),
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+
+        Response<PageResponse<PatientAppointmentDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
-                "patient recived successfully",
-                patientListMapper.appointmentToPatientList(appointments),
+                "Patients received successfully",
+                pageResponse,
                 LocalDateTime.now()
         );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/patient/{physicianId}/{date}")
-    public ResponseEntity<Response<List<PatientAppointmentDTO>>> getPatientsByPhysicianIdAndDate
-            (@PathVariable("physicianId") Integer physicianId, @PathVariable("date")@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime date) {
-        List<Appointment> appointments = appointmentRepository.findByPhysician_employeeIdAndStart(physicianId, date);
-        if(appointments.isEmpty()) {
+    public ResponseEntity<Response<PageResponse<PatientAppointmentDTO>>> getPatientsByPhysicianIdAndDate(
+            @PathVariable("physicianId") Integer physicianId,
+            @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByPhysician_employeeIdAndStart(physicianId, date, pageable);
+        if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No patient found with physician id " + physicianId + " and appointment date " + date);
         }
 
-        Response<List<PatientAppointmentDTO>> response = new Response<>(
+        PageResponse<PatientAppointmentDTO> pageResponse = new PageResponse<>(
+                patientListMapper.appointmentToPatientList(appointmentPage.getContent()),
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+
+        Response<PageResponse<PatientAppointmentDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
-                "patient recived successfully",
-                patientListMapper.appointmentToPatientList(appointments),
+                "Patients received successfully",
+                pageResponse,
                 LocalDateTime.now()
         );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/patient")
-    public ResponseEntity<Response<PatientAppointmentDTO>> getPatientByPhysicianIdAndPatientId
-            (@RequestParam Integer physicianId, @RequestParam Integer patientId) {
+    public ResponseEntity<Response<PatientAppointmentDTO>> getPatientByPhysicianIdAndPatientId(
+            @RequestParam Integer physicianId,
+            @RequestParam Integer patientId) {
         Optional<Patient> patient = appointmentRepository.findByPhysicianIdAndPatientId(physicianId, patientId);
-        if(patient.isEmpty()) {
+        if (patient.isEmpty()) {
             throw new EntityNotFoundException("No appointment found for patient id " + patientId + " and physician id " + physicianId);
         }
         Response<PatientAppointmentDTO> response = new Response<>(
                 HttpStatus.OK.value(),
-                "patient recived successfully",
+                "Patient received successfully",
                 patientMapper.toDto(patient.get()),
                 LocalDateTime.now()
         );
@@ -310,30 +397,42 @@ public class AppointmentController {
     }
 
     @GetMapping("/patient/by-nurse")
-    public ResponseEntity<Response<List<PatientAppointmentDTO>>> getPatientsByNurseId(@RequestParam Integer nurseId) {
-        List<Appointment> appointments = appointmentRepository.findByPrepNurse_employeeId(nurseId);
-        if(appointments.isEmpty()) {
+    public ResponseEntity<Response<PageResponse<PatientAppointmentDTO>>> getPatientsByNurseId(
+            @RequestParam Integer nurseId,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByPrepNurse_employeeId(nurseId, pageable);
+        if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No patient found with Nurse id " + nurseId);
         }
-        Response<List<PatientAppointmentDTO>> response = new Response<>(
+        PageResponse<PatientAppointmentDTO> pageResponse = new PageResponse<>(
+                patientListMapper.appointmentToPatientList(appointmentPage.getContent()),
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+        Response<PageResponse<PatientAppointmentDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
-                "patient recived successfully",
-                patientListMapper.appointmentToPatientList(appointments),
+                "Patients received successfully",
+                pageResponse,
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/patient/by-nurse-and-patient")
-    public ResponseEntity<Response<PatientAppointmentDTO>> getPatientByNurseIdAndPatientId
-            (@RequestParam Integer NurseId, @RequestParam Integer patientId) {
-        Optional<Patient> patient = appointmentRepository.findByNurseIdAndPatientId(NurseId, patientId);
-        if(patient.isEmpty()) {
-            throw new EntityNotFoundException("No appointment found for patient id " + patientId + " and Nurse id " + NurseId);
+    public ResponseEntity<Response<PatientAppointmentDTO>> getPatientByNurseIdAndPatientId(
+            @RequestParam Integer nurseId,
+            @RequestParam Integer patientId) {
+        Optional<Patient> patient = appointmentRepository.findByNurseIdAndPatientId(nurseId, patientId);
+        if (patient.isEmpty()) {
+            throw new EntityNotFoundException("No appointment found for patient id " + patientId + " and Nurse id " + nurseId);
         }
         Response<PatientAppointmentDTO> response = new Response<>(
                 HttpStatus.OK.value(),
-                "patient recived successfully",
+                "Patient received successfully",
                 patientMapper.toDto(patient.get()),
                 LocalDateTime.now()
         );
@@ -341,75 +440,101 @@ public class AppointmentController {
     }
 
     @GetMapping("/patient/by-nurse-and-date")
-    public ResponseEntity<Response<List<PatientAppointmentDTO>>> getPatientsByNurseIdAndDate
-            (@RequestParam Integer nurseId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime date) {
-        List<Appointment> appointments = appointmentRepository.findByPrepNurse_employeeIdAndStart(nurseId, date);
-        if (appointments.isEmpty()) {
-            throw new EntityNotFoundException("No patient found with nurseId" + nurseId + " and appointment date " + date);
+    public ResponseEntity<Response<PageResponse<PatientAppointmentDTO>>> getPatientsByNurseIdAndDate(
+            @RequestParam Integer nurseId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<Appointment> appointmentPage = appointmentRepository.findByPrepNurse_employeeIdAndStart(nurseId, date, pageable);
+        if (appointmentPage.isEmpty()) {
+            throw new EntityNotFoundException("No patient found with nurseId " + nurseId + " and appointment date " + date);
         }
-        Response<List<PatientAppointmentDTO>> response = new Response<>(
+        PageResponse<PatientAppointmentDTO> pageResponse = new PageResponse<>(
+                patientListMapper.appointmentToPatientList(appointmentPage.getContent()),
+                appointmentPage.getNumber(),
+                appointmentPage.getSize(),
+                appointmentPage.getTotalElements(),
+                appointmentPage.getTotalPages(),
+                appointmentPage.isFirst(),
+                appointmentPage.isLast()
+        );
+        Response<PageResponse<PatientAppointmentDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
-                "patient recived successfully",
-                patientListMapper.appointmentToPatientList(appointments),
+                "Patients received successfully",
+                pageResponse,
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
-
     }
 
     @GetMapping("/room/by-patient-and-date")
-    public ResponseEntity<Response<String>> getRoomByPatientIdAndDate
-            (@RequestParam Integer patientId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime date) {
+    public ResponseEntity<Response<String>> getRoomByPatientIdAndDate(
+            @RequestParam Integer patientId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date) {
         Optional<String> room = appointmentRepository.findByPatientIdAndStartDate(patientId, date);
         if (room.isEmpty()) {
-            throw new EntityNotFoundException("No room found with patientId" + patientId + " and appointment date " + date);
+            throw new EntityNotFoundException("No room found with patientId " + patientId + " and appointment date " + date);
         }
         Response<String> response = new Response<>(
                 HttpStatus.OK.value(),
-                "room recived successfully",
-                 room.get(),
+                "Room received successfully",
+                room.get(),
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
-
     }
 
     @GetMapping("/rooms/by-physician-and-date")
-    public ResponseEntity<Response<List<String>>> geRoomByPhysicianIdAndDate
-            (@RequestParam Integer physicianId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime date) {
-        List<String> room = appointmentRepository.findByPhysicianIdAndStartDate(physicianId, date);
-        if (room.isEmpty()) {
-            throw new EntityNotFoundException("No room found with physicianId" + physicianId + " and appointment date " + date);
+    public ResponseEntity<Response<PageResponse<String>>> geRoomByPhysicianIdAndDate(
+            @RequestParam Integer physicianId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<String> roomPage = appointmentRepository.findByPhysicianIdAndStartDate(physicianId, date, pageable);
+        if (roomPage.isEmpty()) {
+            throw new EntityNotFoundException("No room found with physicianId " + physicianId + " and appointment date " + date);
         }
-        Response<List<String>> response = new Response<>(
+        PageResponse<String> pageResponse = new PageResponse<>(
+                roomPage.getContent(),
+                roomPage.getNumber(),
+                roomPage.getSize(),
+                roomPage.getTotalElements(),
+                roomPage.getTotalPages(),
+                roomPage.isFirst(),
+                roomPage.isLast()
+        );
+        Response<PageResponse<String>> response = new Response<>(
                 HttpStatus.OK.value(),
-                "room recived successfully",
-                room,
+                "Rooms received successfully",
+                pageResponse,
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
-
     }
 
     @GetMapping("/rooms/by-nurse-and-date")
-    public ResponseEntity<Response<List<String>>> getRoomByNurseIdAndDate
-            (@RequestParam Integer nurseId, @RequestParam@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime date) {
-        List<String> room = appointmentRepository.findByNurseIdAndStartDate(nurseId, date);
-        if (room.isEmpty()) {
-            throw new EntityNotFoundException("No room found with nurseId" + nurseId + " and appointment date " + date);
+    public ResponseEntity<Response<PageResponse<String>>> getRoomByNurseIdAndDate(
+            @RequestParam Integer nurseId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+        Page<String> roomPage = appointmentRepository.findByNurseIdAndStartDate(nurseId, date, pageable);
+        if (roomPage.isEmpty()) {
+            throw new EntityNotFoundException("No room found with nurseId " + nurseId + " and appointment date " + date);
         }
-        Response<List<String>> response = new Response<>(
+        PageResponse<String> pageResponse = new PageResponse<>(
+                roomPage.getContent(),
+                roomPage.getNumber(),
+                roomPage.getSize(),
+                roomPage.getTotalElements(),
+                roomPage.getTotalPages(),
+                roomPage.isFirst(),
+                roomPage.isLast()
+        );
+        Response<PageResponse<String>> response = new Response<>(
                 HttpStatus.OK.value(),
-                "room recived successfully",
-                room,
+                "Rooms received successfully",
+                pageResponse,
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(response, HttpStatus.OK);
-
     }
 
     @PutMapping("/room/{appointmentId}")
@@ -426,5 +551,29 @@ public class AppointmentController {
               LocalDateTime.now()
       );
       return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+
+    @GetMapping("/grouped")
+    public ResponseEntity<List<Map<String, Object>>> getGroupedData() {
+        List<Object[]> results = appointmentRepository.countAppointmentsPerPhysician();
+        System.out.println("Endpoint HIT!");
+
+        List<Map<String, Object>> response = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("physicianName", row[0]);
+            map.put("appointmentCount", row[1]);
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/roomcount")
+    public List<RoomAppointmentCount> printRoomCounts() {
+        List<RoomAppointmentCount> results = appointmentRepository.findAppointmentCountByRoom();
+
+        return results;
     }
 }

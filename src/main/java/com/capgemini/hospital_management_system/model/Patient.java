@@ -37,19 +37,19 @@ public class Patient {
     @JsonBackReference
     private Physician PCP;
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Appointment> appointments = new HashSet<>();
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Prescribes> prescriptions = new HashSet<>();
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Stay> stays = new HashSet<>();
 
-    @OneToMany(mappedBy = "patient")
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Undergoes> undergoes = new HashSet<>();
 

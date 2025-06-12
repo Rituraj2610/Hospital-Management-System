@@ -11,13 +11,18 @@ import com.capgemini.hospital_management_system.repository.AppointmentRepository
 import com.capgemini.hospital_management_system.repository.PatientRepository;
 import com.capgemini.hospital_management_system.repository.PhysicianRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -33,15 +38,17 @@ public class PatientController {
 
     // GET /api/patient/ - Get list of all patients
     @GetMapping
-    public ResponseEntity<Response<List<PatientDTO>>> getAllPatients() {
-        List<Patient> patients = patientRepository.findAll();
-        if (patients.isEmpty()) {
+    public ResponseEntity<Response<List<PatientDTO>>> getAllPatients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Patient> patientPage = patientRepository.findAll(pageable);
+        if (patientPage.isEmpty()) {
             throw new EntityNotFoundException("No patients found");
         }
-        List<PatientDTO> patientDTOs = new ArrayList<>();
-        for (Patient patient : patients) {
-            patientDTOs.add(patientMapping.toDTO(patient));
-        }
+        List<PatientDTO> patientDTOs = patientPage.getContent().stream()
+                .map(patientMapping::toDTO)
+                .collect(Collectors.toList());
         Response<List<PatientDTO>> response = new Response<>(
                 HttpStatus.OK.value(),
                 "Patients retrieved successfully",
@@ -49,6 +56,7 @@ public class PatientController {
                 LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     // GET /api/patient/{physicianid} - Retrieves patients associated with a specific physician
     @GetMapping("/{physicianid}")
@@ -159,6 +167,45 @@ public class PatientController {
         Response<PatientDTO> response = new Response<>(
                 HttpStatus.OK.value(),
                 "Phone number updated successfully",
+                patientMapping.toDTO(patient),
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/pcp-count")
+    public ResponseEntity<List<Map<String, Object>>> getPatientCountByPhysician() {
+        List<Object[]> results = patientRepository.countPatientsByPhysician();
+
+        List<Map<String, Object>> response = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("physicianName", row[0]);
+            map.put("patientCount", row[1]);
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{SSN}")
+    public ResponseEntity<Response<PatientDTO>> updatePatientData(@PathVariable Integer SSN,
+                                                                  @RequestBody PatientDTO patientDTO) {
+        if (patientDTO.getAddress() == null || patientDTO.getAddress().trim().isEmpty() ||
+                patientDTO.getPhone() == null || patientDTO.getPhone().trim().isEmpty()) {
+            throw new IllegalArgumentException("Address and phone number cannot be empty");
+        }
+        Patient patient = patientRepository.findById(SSN)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with SSN: " + SSN));
+        patient.setAddress(patientDTO.getAddress());
+        patient.setPhone(patientDTO.getPhone());
+        if (patientDTO.getPcpId() != null) {
+            Physician physician = physicianRepository.findByEmployeeId(patientDTO.getPcpId())
+                    .orElseThrow(() -> new EntityNotFoundException("Physician not found with ID: " + patientDTO.getPcpId()));
+            patient.setPCP(physician);
+        }
+        patientRepository.save(patient);
+        Response<PatientDTO> response = new Response<>(
+                HttpStatus.OK.value(),
+                "Patient data updated successfully",
                 patientMapping.toDTO(patient),
                 LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.OK);
