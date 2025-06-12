@@ -1,6 +1,5 @@
 package com.capgemini.hospital_management_system.dto;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,11 +9,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class CreateDepartmentDto {
+public class PhysicianGroupByPositionDto{
 
-    private Integer deptId;
-    private String name;
-    private PhysicianAppointmentDTO head;
-    private List<AffiliatedPhysicianDto> affiliatedPhysicians;
+    private String position;
+    private List<String> physicianNames;
 
 }

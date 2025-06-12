@@ -23,11 +23,11 @@ public class Block {
     @Column(name = "BlockCode")
     private Integer blockCode;
 
-    @OneToMany(mappedBy = "block")
+    @OneToMany(mappedBy = "block", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Room> rooms = new HashSet<>();
 
-    @OneToMany(mappedBy = "block")
+    @OneToMany(mappedBy = "block", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<OnCall> onCalls = new HashSet<>();
 }
