@@ -3,6 +3,7 @@ package com.capgemini.hospital_management_system.controller;
 
 import com.capgemini.hospital_management_system.dto.*;
 import com.capgemini.hospital_management_system.exception.EntityNotFoundException;
+import com.capgemini.hospital_management_system.mapper.PhysicianMapper;
 import com.capgemini.hospital_management_system.mapper.PhysicianTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.ProcedureTrainedInMapping;
 import com.capgemini.hospital_management_system.mapper.TrainedInMapping;
@@ -19,22 +20,15 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.*;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.data.domain.Pageable;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -55,6 +49,8 @@ public class TrainedInController {
     private ProcedureTrainedInMapping procedureTrainedInMapping;
     @Autowired
     private PhysicianTrainedInMapping physicianTrainedInMapping;
+    @Autowired
+    private PhysicianMapper physicianMapper;
 
     // ADITI
     @GetMapping("/physicians/{procedureId}")
@@ -296,6 +292,7 @@ public class TrainedInController {
     }
 
     @PutMapping("/update/{physicianId}/{procedureId}")
+    @Transactional
     public ResponseEntity<Response<Boolean>> updateCertification(
             @PathVariable int physicianId,
             @PathVariable int procedureId,
@@ -325,4 +322,125 @@ public class TrainedInController {
                 LocalDateTime.now()
         ));
     }
+
+    @GetMapping("fetch/physician/{physicianId}")
+    public ResponseEntity<Response<PageResponse<ProcedureTrainedInDTO>>> fetchAllProceduresByPhysicianId(
+            @PathVariable Integer physicianId,
+            @PageableDefault(page = 0, size = 2) Pageable pageable
+    ) {
+
+        if (!physicianRepository.existsById(physicianId)) {
+            throw new EntityNotFoundException("Physician with id: " + physicianId + " not found");
+        }
+
+        Pageable sanitizedPageable = sanitizePageable(pageable);
+
+        Page<Procedure> procedurePage = procedureRepository.findProceduresByPhysicianId(physicianId, sanitizedPageable);
+
+        if(procedurePage.isEmpty()){
+            throw new EntityNotFoundException("No Procedures found!");
+        }
+
+        List<ProcedureTrainedInDTO> dtoList = procedurePage.getContent().stream()
+                .map(procedureTrainedInMapping::toDTO)
+                .toList();
+
+        // Prepare page response
+        PageResponse<ProcedureTrainedInDTO> pageResponse = new PageResponse<>(
+                dtoList,
+                procedurePage.getNumber(),
+                procedurePage.getSize(),
+                procedurePage.getTotalElements(),
+                procedurePage.getTotalPages(),
+                procedurePage.isFirst(),
+                procedurePage.isLast()
+        );
+
+
+
+        // Final response wrapping
+        Response<PageResponse<ProcedureTrainedInDTO>> response = Response.<PageResponse<ProcedureTrainedInDTO>>builder()
+                .status(200)
+                .message("Procedures found successfully")
+                .data(pageResponse)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("fetch/procedure/{procedureId}/physicians")
+    public ResponseEntity<Response<PageResponse<PhysicianAppointmentDTO>>> fetchAllPhysiciansByProcedureId(
+            @PathVariable Integer procedureId,
+            @PageableDefault(page = 0, size = 5) Pageable pageable
+    ) {
+        // Optional: validate procedure existence first
+        if (!procedureRepository.existsById(procedureId)) {
+            throw new EntityNotFoundException("Procedure with id: " + procedureId + " not found");
+        }
+
+        Pageable sanitizedPageable = sanitizePhysicianPageable(pageable);
+
+        // Fetch paginated data from DB
+        Page<Physician> physicianPage = physicianRepository.findPhysiciansByProcedureId(procedureId, sanitizedPageable);
+
+        // Map entities to DTOs
+        List<PhysicianAppointmentDTO> dtoList = physicianPage.getContent().stream()
+                .map(physicianMapper::toDto)  // You may have PhysicianMapping like ProcedureMapping
+                .toList();
+
+        // Wrap into PageResponse
+        PageResponse<PhysicianAppointmentDTO> pageResponse = new PageResponse<>(
+                dtoList,
+                physicianPage.getNumber(),
+                physicianPage.getSize(),
+                physicianPage.getTotalElements(),
+                physicianPage.getTotalPages(),
+                physicianPage.isFirst(),
+                physicianPage.isLast()
+        );
+
+        // Wrap into Response
+        Response<PageResponse<PhysicianAppointmentDTO>> response = Response.<PageResponse<PhysicianAppointmentDTO>>builder()
+                .status(200)
+                .message("Physicians found successfully")
+                .data(pageResponse)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    public Pageable sanitizePageable(Pageable pageable) {
+        List<String> allowedSortProperties = List.of("code", "name", "cost"); // valid Procedure fields
+
+        Sort sanitizedSort = Sort.unsorted();
+
+        if (pageable.getSort().isSorted()) {
+            sanitizedSort = Sort.by(
+                    pageable.getSort().stream()
+                            .filter(order -> allowedSortProperties.contains(order.getProperty()))
+                            .toList()
+            );
+        }
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sanitizedSort);
+    }
+
+    public Pageable sanitizePhysicianPageable(Pageable pageable) {
+        List<String> allowedSortProperties = List.of("employeeId", "name", "position", "ssn");
+
+        Sort sanitizedSort = Sort.unsorted();
+
+        if (pageable.getSort().isSorted()) {
+            sanitizedSort = Sort.by(
+                    pageable.getSort().stream()
+                            .filter(order -> allowedSortProperties.contains(order.getProperty()))
+                            .toList()
+            );
+        }
+
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sanitizedSort);
+    }
+
+
+
 }
