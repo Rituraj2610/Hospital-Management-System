@@ -39,6 +39,7 @@ public class Physician {
     private Set<AffiliatedWith> affiliations = new HashSet<>();
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+
     @JoinTable(
             name = "Trained_In",
             joinColumns = @JoinColumn(name = "Physician"),
