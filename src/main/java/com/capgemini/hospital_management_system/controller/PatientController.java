@@ -186,4 +186,29 @@ public class PatientController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{SSN}")
+    public ResponseEntity<Response<PatientDTO>> updatePatientData(@PathVariable Integer SSN,
+                                                                  @RequestBody PatientDTO patientDTO) {
+        if (patientDTO.getAddress() == null || patientDTO.getAddress().trim().isEmpty() ||
+                patientDTO.getPhone() == null || patientDTO.getPhone().trim().isEmpty()) {
+            throw new IllegalArgumentException("Address and phone number cannot be empty");
+        }
+        Patient patient = patientRepository.findById(SSN)
+                .orElseThrow(() -> new EntityNotFoundException("Patient not found with SSN: " + SSN));
+        patient.setAddress(patientDTO.getAddress());
+        patient.setPhone(patientDTO.getPhone());
+        if (patientDTO.getPcpId() != null) {
+            Physician physician = physicianRepository.findByEmployeeId(patientDTO.getPcpId())
+                    .orElseThrow(() -> new EntityNotFoundException("Physician not found with ID: " + patientDTO.getPcpId()));
+            patient.setPCP(physician);
+        }
+        patientRepository.save(patient);
+        Response<PatientDTO> response = new Response<>(
+                HttpStatus.OK.value(),
+                "Patient data updated successfully",
+                patientMapping.toDTO(patient),
+                LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }
