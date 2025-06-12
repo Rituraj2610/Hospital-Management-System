@@ -9,21 +9,24 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+//@IdClass(TrainedInId.class)
 @Entity
 @Table(name = "Trained_In")
-@IdClass(TrainedInId.class)
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TrainedIn {
-    @Id
-    @ManyToOne
+    @EmbeddedId
+    private TrainedInId id;
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @MapsId("physician")
     @JoinColumn(name = "Physician")
     @JsonBackReference
     private Physician physician;
 
-    @Id
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @MapsId("treatment")
     @JoinColumn(name = "Treatment")
     @JsonBackReference
     private Procedure treatment;
@@ -33,5 +36,4 @@ public class TrainedIn {
 
     @Column(name = "CertificationExpires", nullable = false)
     private LocalDateTime certificationExpires;
-
 }

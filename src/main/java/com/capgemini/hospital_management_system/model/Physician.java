@@ -41,7 +41,7 @@ public class Physician {
     @JsonManagedReference
     private Set<Department> affiliatedDepartments = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "Trained_In",
             joinColumns = @JoinColumn(name = "Physician"),
