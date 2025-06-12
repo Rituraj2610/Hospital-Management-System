@@ -56,6 +56,7 @@ public class TrainedInController {
     @Autowired
     private PhysicianTrainedInMapping physicianTrainedInMapping;
 
+    // ADITI
     @GetMapping("/physicians/{procedureId}")
     public ResponseEntity<Response<List<PhysicianTrainedInDTO>>> getPhysiciansByProcedure(@PathVariable int procedureId) {
         List<TrainedIn> trainedIns = trainedInRepository.findByTreatmentCode(procedureId);
@@ -116,57 +117,7 @@ public class TrainedInController {
         }
     }
     
-    //adding trained in data
-    @PostMapping
-    @Transactional
-	public ResponseEntity<Response<TrainedInPostDTO>> addTrainedIn(@RequestBody TrainedInPostDTO req) {
-
-        if (req.getPhysician() == null || req.getProcedure() == null ||
-                req.getCertificationDate() == null || req.getCertificationExpires() == null) {
-            throw new IllegalArgumentException("Physician, Procedure, and certification dates are required");
-        }
-
-        if (req.getCertificationDate().isAfter(req.getCertificationExpires())) {
-            throw new IllegalArgumentException("Certification date must be before expiration date");
-        }
-
-        Physician physician = physicianRepository.findById(req.getPhysician().getEmployeeId())
-                .orElseGet(() -> {
-                    Physician newPhysician = new Physician();
-                    newPhysician.setEmployeeId(req.getPhysician().getEmployeeId());
-                    newPhysician.setName(req.getPhysician().getName());
-                    newPhysician.setPosition(req.getPhysician().getPosition());
-                    newPhysician.setSsn(req.getPhysician().getSsn());
-                    return newPhysician; // Persisted via cascading
-                });
-        physicianRepository.save(physician);
-
-        Procedure procedure = procedureRepository.findById(req.getProcedure().getCode())
-                .orElseGet(() -> {
-                    Procedure newProcedure = new Procedure();
-                    newProcedure.setCode(req.getProcedure().getCode());
-                    newProcedure.setName(req.getProcedure().getName());
-                    newProcedure.setCost(req.getProcedure().getCost());
-                    return newProcedure; // Persisted via cascading
-                });
-        procedureRepository.save(procedure);
-        TrainedInId id = new TrainedInId(physician.getEmployeeId(), procedure.getCode());
-        if (trainedInRepository.existsById(id)) {
-            throw new IllegalStateException("Training relationship already exists");
-        }
-
-        TrainedIn trainedIn = new TrainedIn();
-        trainedIn.setId(id);
-        trainedIn.setPhysician(physician);
-        trainedIn.setTreatment(procedure);
-        trainedIn.setCertificationDate(req.getCertificationDate());
-        trainedIn.setCertificationExpires(req.getCertificationExpires());
-
-        TrainedIn saved = trainedInRepository.save(trainedIn);
-
-	    return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", req,LocalDateTime.now()));
-	}
-	
+    // ASHU
     @GetMapping
     public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getCertifiedProcedures(
             @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
@@ -237,6 +188,56 @@ public class TrainedInController {
         return ResponseEntity.ok(response);
     }
 
+    // RITURAJ
+    @PostMapping
+    @Transactional
+    public ResponseEntity<Response<TrainedInPostDTO>> addTrainedIn(@RequestBody TrainedInPostDTO req) {
+
+        if (req.getPhysician() == null || req.getProcedure() == null ||
+                req.getCertificationDate() == null || req.getCertificationExpires() == null) {
+            throw new IllegalArgumentException("Physician, Procedure, and certification dates are required");
+        }
+
+        if (req.getCertificationDate().isAfter(req.getCertificationExpires())) {
+            throw new IllegalArgumentException("Certification date must be before expiration date");
+        }
+
+        Physician physician = physicianRepository.findById(req.getPhysician().getEmployeeId())
+                .orElseGet(() -> {
+                    Physician newPhysician = new Physician();
+                    newPhysician.setEmployeeId(req.getPhysician().getEmployeeId());
+                    newPhysician.setName(req.getPhysician().getName());
+                    newPhysician.setPosition(req.getPhysician().getPosition());
+                    newPhysician.setSsn(req.getPhysician().getSsn());
+                    return newPhysician; // Persisted via cascading
+                });
+        physicianRepository.save(physician);
+
+        Procedure procedure = procedureRepository.findById(req.getProcedure().getCode())
+                .orElseGet(() -> {
+                    Procedure newProcedure = new Procedure();
+                    newProcedure.setCode(req.getProcedure().getCode());
+                    newProcedure.setName(req.getProcedure().getName());
+                    newProcedure.setCost(req.getProcedure().getCost());
+                    return newProcedure; // Persisted via cascading
+                });
+        procedureRepository.save(procedure);
+        TrainedInId id = new TrainedInId(physician.getEmployeeId(), procedure.getCode());
+        if (trainedInRepository.existsById(id)) {
+            throw new IllegalStateException("Training relationship already exists");
+        }
+
+        TrainedIn trainedIn = new TrainedIn();
+        trainedIn.setId(id);
+        trainedIn.setPhysician(physician);
+        trainedIn.setTreatment(procedure);
+        trainedIn.setCertificationDate(req.getCertificationDate());
+        trainedIn.setCertificationExpires(req.getCertificationExpires());
+
+        TrainedIn saved = trainedInRepository.save(trainedIn);
+
+        return ResponseEntity.ok(new Response<>(200, "Record Created Successfully", req,LocalDateTime.now()));
+    }
 
     @GetMapping("/dates")
     public ResponseEntity<Response<PageResponse<TrainedInPostDTO>>> getByDates(
@@ -275,5 +276,53 @@ public class TrainedInController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{physicianId}/{procedureId}")
+    public ResponseEntity<TrainedInUpdateDTO> getCertification(
+            @PathVariable int physicianId,
+            @PathVariable int procedureId) {
+        TrainedInId id = new TrainedInId(physicianId, procedureId);
+        TrainedIn trainedIn = trainedInRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Certification not found for physician ID " + physicianId + " and procedure ID " + procedureId));
+        Procedure procedure = trainedIn.getTreatment();
+        TrainedInUpdateDTO dto = new TrainedInUpdateDTO();
+        ProcedureDTO procedureDTO = new ProcedureDTO();
+        procedureDTO.setCode(procedureId);
+        procedureDTO.setName(procedure.getName());
+        procedureDTO.setCost(procedure.getCost());
+        dto.setProcedure(procedureDTO);
+        dto.setCertificationDate(trainedIn.getCertificationDate());
+        dto.setCertificationExpires(trainedIn.getCertificationExpires());
+        return ResponseEntity.ok(dto);
+    }
 
+    @PutMapping("/update/{physicianId}/{procedureId}")
+    public ResponseEntity<Response<Boolean>> updateCertification(
+            @PathVariable int physicianId,
+            @PathVariable int procedureId,
+            @RequestBody TrainedInUpdateDTO updateDTO) {
+
+        Procedure procedure = procedureRepository.findById(procedureId)
+                .orElseThrow(() -> new EntityNotFoundException("Procedure not found"));
+
+        if (updateDTO.getProcedure().getCost() != null) {
+            procedure.setCost(updateDTO.getProcedure().getCost());
+            procedureRepository.save(procedure);
+        }
+
+        TrainedInId id = new TrainedInId(physicianId, procedureId);
+
+        TrainedIn trainedIn = trainedInRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Certification not found"));
+
+        if (updateDTO.getCertificationExpires() != null) {
+            trainedIn.setCertificationExpires(updateDTO.getCertificationExpires());
+            trainedInRepository.save(trainedIn);
+        }
+        return ResponseEntity.ok(new Response<>(
+                HttpStatus.OK.value(),
+                "Certification and procedure updated successfully",
+                true,
+                LocalDateTime.now()
+        ));
+    }
 }
