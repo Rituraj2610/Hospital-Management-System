@@ -20,6 +20,8 @@ public interface AffiliatedWithRepository extends JpaRepository<AffiliatedWith, 
 
         boolean existsByPhysicianEmployeeIdAndPrimaryAffiliationTrue(Integer physicianId);
 
+        Optional<AffiliatedWith> findByPhysician_EmployeeId(Integer physicianId);
+
         Optional<AffiliatedWith> findByPhysicianEmployeeIdAndDepartmentDepartmentId(Integer physicianId, Integer departmentId);
 
 

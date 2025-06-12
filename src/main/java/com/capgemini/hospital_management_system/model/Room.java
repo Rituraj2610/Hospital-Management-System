@@ -22,7 +22,7 @@ public class Room {
     @Column(name = "RoomType", nullable = false)
     private String roomType;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumns({
             @JoinColumn(name = "BlockFloor", referencedColumnName = "BlockFloor"),
             @JoinColumn(name = "BlockCode", referencedColumnName = "BlockCode")
@@ -33,7 +33,7 @@ public class Room {
     @Column(name = "Unavailable", nullable = false)
     private Boolean unavailable;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Stay> stays = new HashSet<>();
 
