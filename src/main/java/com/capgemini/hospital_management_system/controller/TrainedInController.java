@@ -170,7 +170,7 @@ public class TrainedInController {
     @GetMapping
     public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getCertifiedProcedures(
             @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
-            @RequestParam(defaultValue = "2", required = false) Integer pageSize) {
+            @RequestParam(defaultValue = "5", required = false) Integer pageSize) {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         LocalDateTime now = LocalDateTime.now();
@@ -205,7 +205,7 @@ public class TrainedInController {
     public ResponseEntity<Response<List<ProcedureTrainedInDTO>>> getTreatmentsByPhysician(
             @PathVariable Integer physicianId,
             @RequestParam(defaultValue = "0", required = false) Integer pageNumber,
-            @RequestParam(defaultValue = "2", required = false) Integer pageSize) {
+            @RequestParam(defaultValue = "5", required = false) Integer pageSize) {
 
         LocalDateTime now = LocalDateTime.now();
         Pageable pageable = PageRequest.of(pageNumber, pageSize);

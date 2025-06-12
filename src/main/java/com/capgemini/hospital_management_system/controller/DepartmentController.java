@@ -112,7 +112,7 @@ public class DepartmentController {
                 .time(LocalDateTime.now())
                 .build();
 
-        return new ResponseEntity<>(response , HttpStatus.FOUND);
+        return new ResponseEntity<>(response , HttpStatus.OK);
     }
 
 
