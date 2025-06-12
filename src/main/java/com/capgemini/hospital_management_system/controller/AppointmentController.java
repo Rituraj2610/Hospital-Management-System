@@ -8,6 +8,7 @@ import com.capgemini.hospital_management_system.mapper.PatientListMapper;
 import com.capgemini.hospital_management_system.mapper.PatientMapper;
 import com.capgemini.hospital_management_system.model.Appointment;
 import com.capgemini.hospital_management_system.model.Patient;
+import com.capgemini.hospital_management_system.projection.RoomAppointmentCount;
 import com.capgemini.hospital_management_system.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,7 +43,7 @@ public class AppointmentController {
 
     @GetMapping
     public ResponseEntity<Response<PageResponse<AppointmentDTO>>> fetchAllAppointments(
-            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "appointmentId") Pageable pageable) {
         Page<Appointment> appointmentPage = appointmentRepository.findAll(pageable);
         if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No Appointments found!");
@@ -567,5 +568,12 @@ public class AppointmentController {
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/roomcount")
+    public List<RoomAppointmentCount> printRoomCounts() {
+        List<RoomAppointmentCount> results = appointmentRepository.findAppointmentCountByRoom();
+
+        return results;
     }
 }
