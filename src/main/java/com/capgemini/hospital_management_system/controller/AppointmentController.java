@@ -399,7 +399,7 @@ public class AppointmentController {
     @GetMapping("/patient/by-nurse")
     public ResponseEntity<Response<PageResponse<PatientAppointmentDTO>>> getPatientsByNurseId(
             @RequestParam Integer nurseId,
-            @PageableDefault(size = 10, sort = "appointmentId") Pageable pageable) {
+            @PageableDefault(size = 10) Pageable pageable) {
         Page<Appointment> appointmentPage = appointmentRepository.findByPrepNurse_employeeId(nurseId, pageable);
         if (appointmentPage.isEmpty()) {
             throw new EntityNotFoundException("No patient found with Nurse id " + nurseId);
