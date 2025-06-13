@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.apache.tomcat.util.net.openssl.OpenSSLStatus.getName;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -74,7 +75,7 @@ public class DepartmentControllerTest {
         CreateDepartmentDto createDto = new CreateDepartmentDto();
         createDto.setDeptId(2);
         createDto.setName("Neurology");
-        createDto.setPhysicianId(101);
+        createDto.setDeptId(101);
 
         Department savedDepartment = new Department();
         savedDepartment.setDepartmentId(2);
@@ -91,11 +92,12 @@ public class DepartmentControllerTest {
         when(modelMapper.map(savedDepartment, DepartmentDto.class)).thenReturn(savedDto);
         when(modelMapper.map(physician, PhysicianDepartmentDto.class)).thenReturn(physicianDto);
 
-        ResponseEntity<Response<DepartmentDto>> response = departmentController.createDepartment(createDto);
+        ResponseEntity<?> response = departmentController.createDepartment(createDto);
 
+        Response<DepartmentDto> response2 = (Response<DepartmentDto>) response.getBody();
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("Neurology", response.getBody().getData().getName());
-        assertEquals(101, response.getBody().getData().getPhysicianDetail().getEmployeeId());
+        assertEquals("Neurology", response2.getData().getName());
+        assertEquals(101, response2.getData().getPhysicianDetail().getEmployeeId());
     }
 
     @Test

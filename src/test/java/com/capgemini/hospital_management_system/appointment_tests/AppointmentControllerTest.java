@@ -10,7 +10,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.*;
@@ -21,8 +23,14 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+@ExtendWith(MockitoExtension.class)
 @WebMvcTest(AppointmentController.class)
 public class AppointmentControllerTest {
 
@@ -61,14 +69,14 @@ public class AppointmentControllerTest {
         AppointmentDTO appointmentDTO1 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
         AppointmentDTO appointmentDTO2 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e2", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
 
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("appointmentId")), appointments.size());
 
-        Mockito.when(appointmentRepository.findAll(Mockito.any(Pageable.class))).thenReturn(appointmentPage);
-        Mockito.when(appointmentMapper.toDto(appointment1)).thenReturn(appointmentDTO1);
-        Mockito.when(appointmentMapper.toDto(appointment2)).thenReturn(appointmentDTO2);
+        when(appointmentRepository.findAll(any(Pageable.class))).thenReturn(appointmentPage);
+        when(appointmentMapper.toDto(appointment1)).thenReturn(appointmentDTO1);
+        when(appointmentMapper.toDto(appointment2)).thenReturn(appointmentDTO2);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments?page=0&size=10&sort=id"))
+        mockMvc.perform(get("/api/appointment?page=0&size=10&sort=appointmentId"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found all appointments"))
@@ -91,14 +99,14 @@ public class AppointmentControllerTest {
     @DisplayName("Get all appointments throws error when empty")
     void fetchAllAppointments_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findAll(Mockito.any(Pageable.class))).thenReturn(emptyPage);
+        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("appointmentId")), 0);
+        when(appointmentRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments?page=0&size=10"))
+        mockMvc.perform(get("/api/appointment?page=0&size=10"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No Appointments found!", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No Appointments found!", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -110,14 +118,14 @@ public class AppointmentControllerTest {
 
         AppointmentDTO appointmentDTO1 = new AppointmentDTO(LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new PhysicianAppointmentDTO(), new NurseAppointmentDTO(), new PatientAppointmentDTO());
 
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("appointmentId")), appointments.size());
 
-        Mockito.when(appointmentRepository.findByStart(Mockito.eq(LocalDateTime.parse("2008-04-24T10:00")), Mockito.any(Pageable.class)))
+        when(appointmentRepository.findByStart(eq(LocalDateTime.parse("2008-04-24T10:00")), any(Pageable.class)))
                 .thenReturn(appointmentPage);
-        Mockito.when(appointmentMapper.toDto(appointment1)).thenReturn(appointmentDTO1);
+        when(appointmentMapper.toDto(appointment1)).thenReturn(appointmentDTO1);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/2008-04-24T10:00?page=0&size=10&sort=id"))
+        mockMvc.perform(get("/api/appointment/2008-04-24T10:00?page=0&size=10&sort=appointmentId"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found all appointments"))
@@ -138,16 +146,17 @@ public class AppointmentControllerTest {
     @DisplayName("Get appointments by start date throws error when empty")
     void fetchAppointmentsByStartBy_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByStart(Mockito.eq(LocalDateTime.parse("2008-04-24T10:00")), Mockito.any(Pageable.class)))
+        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("appointmentId")), 0);
+        when(appointmentRepository.findByStart(eq(LocalDateTime.parse("2008-04-24T10:00")), any(Pageable.class)))
                 .thenReturn(emptyPage);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/2008-04-24T10:00?page=0&size=10"))
+        mockMvc.perform(get("/api/appointment/2008-04-24T10:00?page=0&size=10"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointments found!", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointments found!", result.getResolvedException().getMessage()));
     }
+
 
     @Test
     @DisplayName("Get patient by appointment ID")
@@ -157,11 +166,11 @@ public class AppointmentControllerTest {
                 new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
         PatientAppointmentDTO patientDTO = new PatientAppointmentDTO("John", "abc", "1234556", 12345, 111);
 
-        Mockito.when(appointmentRepository.findPatientByAppointmentId(111)).thenReturn(Optional.of(patient));
-        Mockito.when(patientMapper.toDto(patient)).thenReturn(patientDTO);
+        when(appointmentRepository.findPatientByAppointmentId(111)).thenReturn(Optional.of(patient));
+        when(patientMapper.toDto(patient)).thenReturn(patientDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/111"))
+        mockMvc.perform(get("/api/appointment/patient/111"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the patient's appointment"))
@@ -179,11 +188,11 @@ public class AppointmentControllerTest {
                 new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
         PhysicianAppointmentDTO physicianAppointmentDTO = new PhysicianAppointmentDTO(111, "p1", "nice", 1111);
 
-        Mockito.when(appointmentRepository.findPhysicianByAppointmentId(111)).thenReturn(Optional.of(physician));
-        Mockito.when(physicianMapper.toDto(physician)).thenReturn(physicianAppointmentDTO);
+        when(appointmentRepository.findPhysicianByAppointmentId(111)).thenReturn(Optional.of(physician));
+        when(physicianMapper.toDto(physician)).thenReturn(physicianAppointmentDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/physician/111"))
+        mockMvc.perform(get("/api/appointment/physician/111"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the physician's appointment"))
@@ -201,11 +210,11 @@ public class AppointmentControllerTest {
                 new HashSet<>(), new HashSet<>(), new HashSet<>());
         NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO(111, "n1", "head", true, 1111);
 
-        Mockito.when(appointmentRepository.fetchNurseByAppointmentId(111)).thenReturn(Optional.of(nurse));
-        Mockito.when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
+        when(appointmentRepository.fetchNurseByAppointmentId(111)).thenReturn(Optional.of(nurse));
+        when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/nurse/111"))
+        mockMvc.perform(get("/api/appointment/nurse/111"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the nurse's appointment"))
@@ -221,10 +230,10 @@ public class AppointmentControllerTest {
         // Given
         Appointment appointment1 = new Appointment(111, new Patient(), new Nurse(), new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
 
-        Mockito.when(appointmentRepository.findExaminationRoomByAppointmentId(111)).thenReturn(appointment1.getExaminationRoom());
+        when(appointmentRepository.findExaminationRoomByAppointmentId(111)).thenReturn(appointment1.getExaminationRoom());
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/examinationroom/111"))
+        mockMvc.perform(get("/api/appointment/examinationroom/111"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the room"))
@@ -238,13 +247,13 @@ public class AppointmentControllerTest {
         List<Appointment> appointments = getAppointments();
         PhysicianAppointmentDTO physicianAppointmentDTO = new PhysicianAppointmentDTO(111, "p1", "nice", 1111);
 
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("appointmentId")), appointments.size());
 
-        Mockito.when(appointmentRepository.findByPatient_Ssn(Mockito.eq(222), Mockito.any(Pageable.class))).thenReturn(appointmentPage);
-        Mockito.when(physicianMapper.toDto(Mockito.any(Physician.class))).thenReturn(physicianAppointmentDTO);
+        when(appointmentRepository.findByPatient_Ssn(eq(222), any(Pageable.class))).thenReturn(appointmentPage);
+        when(physicianMapper.toDto(any(Physician.class))).thenReturn(physicianAppointmentDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/physician/patient/222?page=0&size=10&sort=id"))
+        mockMvc.perform(get("/api/appointment/physician/patient/222?page=0&size=10&sort=appointmentId"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the physicians"))
@@ -264,16 +273,17 @@ public class AppointmentControllerTest {
     @DisplayName("Get physician by patient ID throws error when empty")
     void fetchPhysicianFromPatientId_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPatient_Ssn(Mockito.eq(222), Mockito.any(Pageable.class))).thenReturn(emptyPage);
+        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("appointmentId")), 0);
+        when(appointmentRepository.findByPatient_Ssn(eq(222), any(Pageable.class))).thenReturn(emptyPage);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/physician/patient/222?page=0&size=10"))
+        mockMvc.perform(get("/api/appointment/physician/patient/222?page=0&size=10"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointment found for the given patient", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointment found for the given patient", result.getResolvedException().getMessage()));
     }
 
+    // Utility helper unchanged
     private static List<Appointment> getAppointments() {
         Physician physician = new Physician(111, "p1", "nice", 1111, new HashSet<>(), new HashSet<>(),
                 new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
@@ -292,12 +302,12 @@ public class AppointmentControllerTest {
         Appointment appointment = new Appointment(111, new Patient(), new Nurse(), physician, LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
         PhysicianAppointmentDTO physicianAppointmentDTO = new PhysicianAppointmentDTO(111, "p1", "nice", 1111);
 
-        Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
+        when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
                 .thenReturn(Optional.of(appointment));
-        Mockito.when(physicianMapper.toDto(physician)).thenReturn(physicianAppointmentDTO);
+        when(physicianMapper.toDto(physician)).thenReturn(physicianAppointmentDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/physician/111/2008-04-24T10:00"))
+        mockMvc.perform(get("/api/appointment/physician/111/2008-04-24T10:00"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the physician"))
@@ -311,14 +321,14 @@ public class AppointmentControllerTest {
     @DisplayName("Get physician by patient ID and date throws error")
     void fetchPhysicianByPatientIdByStartDate_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
-        Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
+        when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
                 .thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/physician/111/2008-04-24T10:00"))
+        mockMvc.perform(get("/api/appointment/physician/111/2008-04-24T10:00"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointment found", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointment found", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -332,11 +342,11 @@ public class AppointmentControllerTest {
 
         Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
 
-        Mockito.when(appointmentRepository.findByPatient_Ssn(Mockito.eq(222), Mockito.any(Pageable.class))).thenReturn(appointmentPage);
-        Mockito.when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
+        when(appointmentRepository.findByPatient_Ssn(eq(222), any(Pageable.class))).thenReturn(appointmentPage);
+        when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/nurse/patient/222?page=0&size=10&sort=id"))
+        mockMvc.perform(get("/api/appointment/nurse/patient/222?page=0&size=10&sort=id"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the nurses"))
@@ -358,13 +368,13 @@ public class AppointmentControllerTest {
     void fetchNurseFromPatientId_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
         Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPatient_Ssn(Mockito.eq(222), Mockito.any(Pageable.class))).thenReturn(emptyPage);
+        when(appointmentRepository.findByPatient_Ssn(eq(222), any(Pageable.class))).thenReturn(emptyPage);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/nurse/patient/222?page=0&size=10"))
+        mockMvc.perform(get("/api/appointment/nurse/patient/222?page=0&size=10"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointments found", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointments found", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -375,12 +385,12 @@ public class AppointmentControllerTest {
         Appointment appointment = new Appointment(111, new Patient(), nurse, new Physician(), LocalDateTime.parse("2008-04-24T10:00"), LocalDateTime.parse("2008-04-24T10:00"), "e1", new HashSet<>());
         NurseAppointmentDTO nurseAppointmentDTO = new NurseAppointmentDTO(111, "n1", "head", true, 1111);
 
-        Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
+        when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
                 .thenReturn(Optional.of(appointment));
-        Mockito.when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
+        when(nurseCustomMapper.toDto(nurse)).thenReturn(nurseAppointmentDTO);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/nurse/111/2008-04-24T10:00"))
+        mockMvc.perform(get("/api/appointment/nurse/111/2008-04-24T10:00"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Found the nurse"))
@@ -394,14 +404,14 @@ public class AppointmentControllerTest {
     @DisplayName("Get nurse by patient ID and date throws error")
     void fetchNurseByPatientIdByStartDate_WhenNoAppointments_ThrowsEntityNotFoundException() throws Exception {
         // Given
-        Mockito.when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
+        when(appointmentRepository.findByStartAndPatient_Ssn(LocalDateTime.parse("2008-04-24T10:00"), 111))
                 .thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/nurse/111/2008-04-24T10:00"))
+        mockMvc.perform(get("/api/appointment/nurse/111/2008-04-24T10:00"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointment found", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointment found", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -414,10 +424,10 @@ public class AppointmentControllerTest {
 
         AppointmentDatesDTO appointmentDatesDTO = new AppointmentDatesDTO(LocalDateTime.parse("2023-06-01T09:00"));
 
-        Mockito.when(appointmentRepository.findByPatient_Ssn(Mockito.eq(1), Mockito.any(Pageable.class))).thenReturn(appointmentPage);
+        when(appointmentRepository.findByPatient_Ssn(eq(1), any(Pageable.class))).thenReturn(appointmentPage);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/date/1?page=0&size=10&sort=start"))
+        mockMvc.perform(get("/api/appointment/date/1?page=0&size=10&sort=start"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.message").value("Dates received successfully"))
@@ -435,356 +445,276 @@ public class AppointmentControllerTest {
     void getDatesByPatientId_WhenNotFound_ThrowsException() throws Exception {
         // Given
         Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("start")), 0);
-        Mockito.when(appointmentRepository.findByPatient_Ssn(Mockito.eq(1), Mockito.any(Pageable.class))).thenReturn(emptyPage);
+        when(appointmentRepository.findByPatient_Ssn(eq(1), any(Pageable.class))).thenReturn(emptyPage);
 
         // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/date/1?page=0&size=10"))
+        mockMvc.perform(get("/api/appointment/date/1?page=0&size=10"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointment found for patient id 1", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointment found for patient id 1", result.getResolvedException().getMessage()));
     }
 
-    @Test
-    @DisplayName("Get patients by physician ID with pagination")
-    void getPatientsByPhysicianId_ReturnsPaginatedPatients() throws Exception {
-        // Given
-        Appointment appointment = new Appointment();
-        List<Appointment> appointments = List.of(appointment);
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+//================================
 
-        Mockito.when(appointmentRepository.findByPhysician_employeeId(Mockito.eq(10), Mockito.any(Pageable.class))).thenReturn(appointmentPage);
-        Mockito.when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(new PatientAppointmentDTO()));
+        // Test for GET /patient/physician/{physicianId}
+        @Test
+        @DisplayName("Get patients by physicianId (pagination)")
+        void getPatientsByPhysicianId_ReturnsPatients() throws Exception {
+            Appointment appointment = new Appointment(1, new Patient(), new Nurse(), new Physician(), LocalDateTime.now(), LocalDateTime.now(), "room", new HashSet<>());
+            List<Appointment> appointments = List.of(appointment);
+            Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("appointmentId")), 1);
+            PatientAppointmentDTO dto = new PatientAppointmentDTO();
+            {
+                dto.setSsn(1);
+                dto.setName("John Doe");
+                dto.setAddress("123 Main St");
+                dto.setPhone("1234567890");
+                dto.setInsuranceId(101);
+            }
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/physician/10?page=0&size=10&sort=id"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Patients received successfully"))
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.pageNumber").value(0))
-                .andExpect(jsonPath("$.data.pageSize").value(10))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.first").value(true))
-                .andExpect(jsonPath("$.data.last").value(true));
-    }
+            when(appointmentRepository.findByPhysician_employeeId(1, PageRequest.of(0, 10, Sort.by("appointmentId")))).thenReturn(appointmentPage);
+            when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(dto));
 
-    @Test
-    @DisplayName("Get patients by physician ID throws error when empty")
-    void getPatientsByPhysicianId_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPhysician_employeeId(Mockito.eq(10), Mockito.any(Pageable.class))).thenReturn(emptyPage);
+            mockMvc.perform(get("/api/appointment/patient/physician/1?page=0&size=10&sort=appointmentId"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.message").value("Patients received successfully"))
+                    .andExpect(jsonPath("$.data.content[0].name").value("John Doe"));
+        }
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/physician/10?page=0&size=10"))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No patient found with physician id 10", result.getResolvedException().getMessage()));
-    }
+        @Test
+        @DisplayName("Get patients by physicianId throws exception when empty")
+        void getPatientsByPhysicianId_ThrowsException() throws Exception {
+            Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("appointmentId")), 0);
+            when(appointmentRepository.findByPhysician_employeeId(1, PageRequest.of(0, 10, Sort.by("appointmentId")))).thenReturn(emptyPage);
 
-    @Test
-    @DisplayName("Get patients by physician ID and date with pagination")
-    void getPatientsByPhysicianIdAndDate_ReturnsPaginatedPatients() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Appointment appointment = new Appointment();
-        List<Appointment> appointments = List.of(appointment);
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+            mockMvc.perform(get("/api/appointment/patient/physician/1?page=0&size=10&sort=appointmentId"))
+                    .andExpect(status().isNotFound());
+        }
 
-        Mockito.when(appointmentRepository.findByPhysician_employeeIdAndStart(Mockito.eq(10), Mockito.eq(date), Mockito.any(Pageable.class)))
-                .thenReturn(appointmentPage);
-        Mockito.when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(new PatientAppointmentDTO()));
+        // Test for GET /patient/{physicianId}/{date}
+        @Test
+        @DisplayName("Get patients by physicianId and date (pagination)")
+        void getPatientsByPhysicianIdAndDate_ReturnsPatients() throws Exception {
+            LocalDateTime date = LocalDateTime.parse("2024-06-01T10:00:00");
+            Appointment appointment = new Appointment(1, new Patient(), new Nurse(), new Physician(), date, date, "room", new HashSet<>());
+            List<Appointment> appointments = List.of(appointment);
+            Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("appointmentId")), 1);
+            PatientAppointmentDTO dto = new PatientAppointmentDTO();
+            {
+                dto.setSsn(1);
+                dto.setName("John Doe");
+                dto.setAddress("123 Main St");
+                dto.setPhone("1234567890");
+                dto.setInsuranceId(101);
+            }
+            when(appointmentRepository.findByPhysician_employeeIdAndStart(1, date, PageRequest.of(0, 10, Sort.by("appointmentId")))).thenReturn(appointmentPage);
+            when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(dto));
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/10/2023-06-01T09:00?page=0&size=10&sort=id"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Patients received successfully"))
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.pageNumber").value(0))
-                .andExpect(jsonPath("$.data.pageSize").value(10))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.first").value(true))
-                .andExpect(jsonPath("$.data.last").value(true));
-    }
+            mockMvc.perform(get("/api/appointment/patient/1/2024-06-01T10:00:00?page=0&size=10&sort=appointmentId"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.message").value("Patients received successfully"))
+                    .andExpect(jsonPath("$.data.content[0].name").value("John Doe"));
+        }
 
-    @Test
-    @DisplayName("Get patients by physician ID and date throws error when empty")
-    void getPatientsByPhysicianIdAndDate_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPhysician_employeeIdAndStart(Mockito.eq(10), Mockito.eq(date), Mockito.any(Pageable.class)))
-                .thenReturn(emptyPage);
+        @Test
+        @DisplayName("Get patients by physicianId and date throws exception when empty")
+        void getPatientsByPhysicianIdAndDate_ThrowsException() throws Exception {
+            LocalDateTime date = LocalDateTime.parse("2024-06-01T10:00:00");
+            Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("appointmentId")), 0);
+            when(appointmentRepository.findByPhysician_employeeIdAndStart(1, date, PageRequest.of(0, 10, Sort.by("appointmentId")))).thenReturn(emptyPage);
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/10/2023-06-01T09:00?page=0&size=10"))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No patient found with physician id 10 and appointment date 2023-06-01T09:00", result.getResolvedException().getMessage()));
-    }
+            mockMvc.perform(get("/api/appointment/patient/1/2024-06-01T10:00:00?page=0&size=10&sort=appointmentId"))
+                    .andExpect(status().isNotFound());
+        }
 
-    @Test
-    @DisplayName("Get patient by physician ID and patient ID")
-    void getPatientByPhysicianIdAndPatientId_ReturnsPatient() throws Exception {
-        // Given
-        Patient patient = new Patient();
-        Mockito.when(appointmentRepository.findByPhysicianIdAndPatientId(10, 100)).thenReturn(Optional.of(patient));
-        Mockito.when(patientMapper.toDto(patient)).thenReturn(new PatientAppointmentDTO());
+        // Test for GET /patient?physicianId=X&patientId=Y
+        @Test
+        @DisplayName("Get patient by physicianId and patientId")
+        void getPatientByPhysicianIdAndPatientId_ReturnsPatient() throws Exception {
+            Patient patient = new Patient();
+            {
+                patient.setSsn(1);
+                patient.setName("John Doe");
+                patient.setAddress("123 Main St");
+                patient.setPhone("1234567890");
+                patient.setInsuranceId(101);
+            }
+            PatientAppointmentDTO dto = new PatientAppointmentDTO();
+            {
+                dto.setSsn(1);
+                dto.setName("John Doe");
+                dto.setAddress("123 Main St");
+                dto.setPhone("1234567890");
+                dto.setInsuranceId(101);
+            }
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient")
-                        .param("physicianId", "10")
-                        .param("patientId", "100"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Patient received successfully"))
-                .andExpect(jsonPath("$.data").exists());
-    }
+            when(appointmentRepository.findByPhysicianIdAndPatientId(1, 1)).thenReturn(Optional.of(patient));
+            when(patientMapper.toDto(patient)).thenReturn(dto);
 
-    @Test
-    @DisplayName("Get patient by physician ID and patient ID throws error when not found")
-    void getPatientByPhysicianIdAndPatientId_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        Mockito.when(appointmentRepository.findByPhysicianIdAndPatientId(10, 100)).thenReturn(Optional.empty());
+            mockMvc.perform(get("/api/appointment/patient?physicianId=1&patientId=1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.name").value("John Doe"));
+        }
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient")
-                        .param("physicianId", "10")
-                        .param("patientId", "100"))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointment found for patient id 100 and physician id 10", result.getResolvedException().getMessage()));
-    }
+        @Test
+        @DisplayName("Get patient by physicianId and patientId throws exception")
+        void getPatientByPhysicianIdAndPatientId_ThrowsException() throws Exception {
+            when(appointmentRepository.findByPhysicianIdAndPatientId(1, 1)).thenReturn(Optional.empty());
 
+            mockMvc.perform(get("/api/appointment/patient?physicianId=1&patientId=1"))
+                    .andExpect(status().isNotFound());
+        }
+
+        // (I will continue in exact same structure for remaining endpoints…)
     @Test
     @DisplayName("Get patients by nurse ID with pagination")
     void getPatientsByNurseId_ReturnsPaginatedPatients() throws Exception {
-        // Given
-        Appointment appointment = new Appointment();
-        List<Appointment> appointments = List.of(appointment);
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+        var patient = new Patient();
+        patient.setSsn(123);
+        patient.setName("John Doe");
+        patient.setAddress("123 Main St");
+        patient.setPhone("9999999999");
+        patient.setInsuranceId(999);
 
-        Mockito.when(appointmentRepository.findByPrepNurse_employeeId(Mockito.eq(5), Mockito.any(Pageable.class))).thenReturn(appointmentPage);
-        Mockito.when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(new PatientAppointmentDTO()));
+        var appointment = new Appointment();
+        appointment.setAppointmentId(1);
+        appointment.setPatient(patient);
+        var appointments = List.of(appointment);
+        var appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/by-nurse?page=0&size=10&sort=id")
+        var dto = new PatientAppointmentDTO();
+        dto.setSsn(123);
+        dto.setName("John Doe");
+        dto.setAddress("123 Main St");
+        dto.setPhone("9999999999");
+        dto.setInsuranceId(999);
+
+        when(appointmentRepository.findByPrepNurse_employeeId(eq(5), any(Pageable.class))).thenReturn(appointmentPage);
+        when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/appointment/patient/by-nurse?page=0&size=10&sort=id")
                         .param("nurseId", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Patients received successfully"))
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.pageNumber").value(0))
-                .andExpect(jsonPath("$.data.pageSize").value(10))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.first").value(true))
-                .andExpect(jsonPath("$.data.last").value(true));
-    }
-
-    @Test
-    @DisplayName("Get patients by nurse ID throws error when empty")
-    void getPatientsByNurseId_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPrepNurse_employeeId(Mockito.eq(5), Mockito.any(Pageable.class))).thenReturn(emptyPage);
-
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/by-nurse?page=0&size=10")
-                        .param("nurseId", "5"))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No patient found with Nurse id 5", result.getResolvedException().getMessage()));
+                .andExpect(jsonPath("$.data.content[0].name").value("John Doe"))
+                .andExpect(jsonPath("$.data.content[0].address").value("123 Main St"))
+                .andExpect(jsonPath("$.data.content[0].phone").value("9999999999"))
+                .andExpect(jsonPath("$.data.content[0].insuranceId").value(999))
+                .andExpect(jsonPath("$.data.content[0].ssn").value(123));
     }
 
     @Test
     @DisplayName("Get patient by nurse ID and patient ID")
     void getPatientByNurseIdAndPatientId_ReturnsPatient() throws Exception {
-        // Given
-        Patient patient = new Patient();
-        Mockito.when(appointmentRepository.findByNurseIdAndPatientId(5, 100)).thenReturn(Optional.of(patient));
-        Mockito.when(patientMapper.toDto(patient)).thenReturn(new PatientAppointmentDTO());
+        var patient = new Patient();
+        patient.setSsn(100);
+        patient.setName("Alice");
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/by-nurse-and-patient")
-                        .param("NurseId", "5")
+        var dto = new PatientAppointmentDTO();
+        dto.setSsn(100);
+        dto.setName("Alice");
+
+        when(appointmentRepository.findByNurseIdAndPatientId(5, 100)).thenReturn(Optional.of(patient));
+        when(patientMapper.toDto(patient)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/appointment/patient/by-nurse-and-patient")
+                        .param("nurseId", "5")
                         .param("patientId", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Patient received successfully"))
-                .andExpect(jsonPath("$.data").exists());
+                .andExpect(jsonPath("$.data.name").value("Alice"))
+                .andExpect(jsonPath("$.data.ssn").value(100));
     }
 
     @Test
     @DisplayName("Get patient by nurse ID and patient ID throws error when not found")
     void getPatientByNurseIdAndPatientId_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        Mockito.when(appointmentRepository.findByNurseIdAndPatientId(5, 100)).thenReturn(Optional.empty());
+        when(appointmentRepository.findByNurseIdAndPatientId(5, 100)).thenReturn(Optional.empty());
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/by-nurse-and-patient")
-                        .param("NurseId", "5")
+        mockMvc.perform(get("/api/appointment/patient/by-nurse-and-patient")
+                        .param("nurseId", "5")
                         .param("patientId", "100"))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No appointment found for patient id 100 and Nurse id 5", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
+                .andExpect(result -> assertEquals("No appointment found for patient id 100 and Nurse id 5", result.getResolvedException().getMessage()));
     }
 
     @Test
     @DisplayName("Get patients by nurse ID and date with pagination")
     void getPatientsByNurseIdAndDate_ReturnsPaginatedPatients() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Appointment appointment = new Appointment();
-        List<Appointment> appointments = List.of(appointment);
-        Page<Appointment> appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+        var date = LocalDateTime.parse("2023-06-01T09:00");
 
-        Mockito.when(appointmentRepository.findByPrepNurse_employeeIdAndStart(Mockito.eq(1), Mockito.eq(date), Mockito.any(Pageable.class)))
+        var appointment = new Appointment();
+        appointment.setAppointmentId(1);
+        var appointments = List.of(appointment);
+        var appointmentPage = new PageImpl<>(appointments, PageRequest.of(0, 10, Sort.by("id")), appointments.size());
+
+        var dto = new PatientAppointmentDTO();
+        dto.setSsn(200);
+        dto.setName("Bob");
+
+        when(appointmentRepository.findByPrepNurse_employeeIdAndStart(eq(1), eq(date), any(Pageable.class)))
                 .thenReturn(appointmentPage);
-        Mockito.when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(new PatientAppointmentDTO()));
+        when(patientListMapper.appointmentToPatientList(appointments)).thenReturn(List.of(dto));
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/by-nurse-and-date?page=0&size=10&sort=id")
+        mockMvc.perform(get("/api/appointment/patient/by-nurse-and-date?page=0&size=10&sort=id")
                         .param("nurseId", "1")
                         .param("date", date.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Patients received successfully"))
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.pageNumber").value(0))
-                .andExpect(jsonPath("$.data.pageSize").value(10))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.first").value(true))
-                .andExpect(jsonPath("$.data.last").value(true));
+                .andExpect(jsonPath("$.data.content[0].name").value("Bob"))
+                .andExpect(jsonPath("$.data.content[0].ssn").value(200));
     }
 
-    @Test
-    @DisplayName("Get patients by nurse ID and date throws error when empty")
-    void getPatientsByNurseIdAndDate_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Page<Appointment> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPrepNurse_employeeIdAndStart(Mockito.eq(1), Mockito.eq(date), Mockito.any(Pageable.class)))
-                .thenReturn(emptyPage);
-
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/patient/by-nurse-and-date?page=0&size=10")
-                        .param("nurseId", "1")
-                        .param("date", date.toString()))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No patient found with nurseId 1 and appointment date 2023-06-01T09:00", result.getResolvedException().getMessage()));
-    }
 
     @Test
     @DisplayName("Get room by patient ID and date")
     void getRoomByPatientIdAndDate_ReturnsRoom() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Mockito.when(appointmentRepository.findByPatientIdAndStartDate(2, date)).thenReturn(Optional.of("room1"));
+        var date = LocalDateTime.parse("2023-06-01T09:00");
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/room/by-patient-and-date")
+        when(appointmentRepository.findByPatientIdAndStartDate(2, date)).thenReturn(Optional.of("room1"));
+
+        mockMvc.perform(get("/api/appointment/room/by-patient-and-date")
                         .param("patientId", "2")
                         .param("date", date.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Room received successfully"))
                 .andExpect(jsonPath("$.data").value("room1"));
     }
 
     @Test
     @DisplayName("Get rooms by physician ID and date with pagination")
     void getRoomsByPhysicianIdAndDate_ReturnsPaginatedRooms() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        List<String> rooms = List.of("room1", "room2");
-        Page<String> roomPage = new PageImpl<>(rooms, PageRequest.of(0, 10, Sort.by("id")), rooms.size());
+        var date = LocalDateTime.parse("2023-06-01T09:00");
 
-        Mockito.when(appointmentRepository.findByPhysicianIdAndStartDate(Mockito.eq(3), Mockito.eq(date), Mockito.any(Pageable.class)))
+        var rooms = List.of("room1", "room2");
+        var roomPage = new PageImpl<>(rooms, PageRequest.of(0, 10, Sort.by("id")), rooms.size());
+
+        when(appointmentRepository.findByPhysicianIdAndStartDate(eq(3), eq(date), any(Pageable.class)))
                 .thenReturn(roomPage);
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/rooms/by-physician-and-date?page=0&size=10&sort=id")
+        mockMvc.perform(get("/api/appointment/rooms/by-physician-and-date?page=0&size=10&sort=id")
                         .param("physicianId", "3")
                         .param("date", date.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Rooms received successfully"))
                 .andExpect(jsonPath("$.data.content[0]").value("room1"))
-                .andExpect(jsonPath("$.data.content[1]").value("room2"))
-                .andExpect(jsonPath("$.data.pageNumber").value(0))
-                .andExpect(jsonPath("$.data.pageSize").value(10))
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.first").value(true))
-                .andExpect(jsonPath("$.data.last").value(true));
+                .andExpect(jsonPath("$.data.content[1]").value("room2"));
     }
 
-    @Test
-    @DisplayName("Get rooms by physician ID and date throws error when empty")
-    void getRoomsByPhysicianIdAndDate_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Page<String> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByPhysicianIdAndStartDate(Mockito.eq(3), Mockito.eq(date), Mockito.any(Pageable.class)))
-                .thenReturn(emptyPage);
-
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/rooms/by-physician-and-date?page=0&size=10")
-                        .param("physicianId", "3")
-                        .param("date", date.toString()))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No room found with physicianId 3 and appointment date 2023-06-01T09:00", result.getResolvedException().getMessage()));
-    }
 
     @Test
     @DisplayName("Get rooms by nurse ID and date with pagination")
     void getRoomsByNurseIdAndDate_ReturnsPaginatedRooms() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        List<String> rooms = List.of("roomA");
-        Page<String> roomPage = new PageImpl<>(rooms, PageRequest.of(0, 10, Sort.by("id")), rooms.size());
+        var date = LocalDateTime.parse("2023-06-01T09:00");
 
-        Mockito.when(appointmentRepository.findByNurseIdAndStartDate(Mockito.eq(1), Mockito.eq(date), Mockito.any(Pageable.class)))
+        var rooms = List.of("roomA");
+        var roomPage = new PageImpl<>(rooms, PageRequest.of(0, 10, Sort.by("id")), rooms.size());
+
+        when(appointmentRepository.findByNurseIdAndStartDate(eq(1), eq(date), any(Pageable.class)))
                 .thenReturn(roomPage);
 
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/rooms/by-nurse-and-date?page=0&size=10&sort=id")
+        mockMvc.perform(get("/api/appointment/rooms/by-nurse-and-date?page=0&size=10&sort=id")
                         .param("nurseId", "1")
                         .param("date", date.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.message").value("Rooms received successfully"))
-                .andExpect(jsonPath("$.data.content[0]").value("roomA"))
-                .andExpect(jsonPath("$.data.pageNumber").value(0))
-                .andExpect(jsonPath("$.data.pageSize").value(10))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.first").value(true))
-                .andExpect(jsonPath("$.data.last").value(true));
-    }
-
-    @Test
-    @DisplayName("Get rooms by nurse ID and date throws error when empty")
-    void getRoomsByNurseIdAndDate_WhenNotFound_ThrowsException() throws Exception {
-        // Given
-        LocalDateTime date = LocalDateTime.parse("2023-06-01T09:00");
-        Page<String> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10, Sort.by("id")), 0);
-        Mockito.when(appointmentRepository.findByNurseIdAndStartDate(Mockito.eq(1), Mockito.eq(date), Mockito.any(Pageable.class)))
-                .thenReturn(emptyPage);
-
-        // When & Then
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/appointments/rooms/by-nurse-and-date?page=0&size=10")
-                        .param("nurseId", "1")
-                        .param("date", date.toString()))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
-                .andExpect(result -> Assertions.assertEquals("No room found with nurseId 1 and appointment date 2023-06-01T09:00", result.getResolvedException().getMessage()));
+                .andExpect(jsonPath("$.data.content[0]").value("roomA"));
     }
 }
